@@ -1,0 +1,27 @@
+# Visual Studio user files
+.vs/
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build output
+[Bb]in/
+[Oo]bj/
+build-verification/
+
+# NuGet packages restored locally
+packages/
+*.nupkg
+*.snupkg
+.tools/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# ReSharper and test results
+_ReSharper*/
+TestResults/
