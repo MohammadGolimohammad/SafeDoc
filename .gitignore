@@ -25,3 +25,5 @@ packages/
 # ReSharper and test results
 _ReSharper*/
 TestResults/
+/SafeDoc.UI/FormLogin.cs
+/SafeDoc.UI/FormMain.Designer.cs
