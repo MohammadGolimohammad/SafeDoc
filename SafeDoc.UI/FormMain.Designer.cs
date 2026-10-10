@@ -21,7 +21,7 @@ namespace SafeDoc.UI
         private System.Windows.Forms.MaskedTextBox txtDeviceTime, txtExpirationTime;
         private Atf.UI.DateTimeSelector deviceDateSelector, expirationDateSelector;
         private System.Windows.Forms.Button btnEnrollFingerprint, btnCancelUser, btnDeleteAllFingerprints, btnAddPassword, btnDeletePassword, btnDeleteAllPasswords, btnShowPasswords, btnSetDateTime, btnSetExpiration, btnGetExpiration, btnSetUsb;
-        private System.Windows.Forms.Button btnEnterStatusToggle, btnHidAfterExpirationToggle;
+        private System.Windows.Forms.Button btnEnterStatusToggle, btnHidAfterExpirationToggle, btnBuzzerStatusToggle;
         private System.Windows.Forms.Button btnToggleFingerprintPassword;
         private System.Windows.Forms.Panel pnlPasswordStrengthWeak, pnlPasswordStrengthMedium, pnlPasswordStrengthStrong;
         private System.Windows.Forms.DataGridView dgvUsers;
@@ -77,6 +77,7 @@ namespace SafeDoc.UI
             this.deviceDateSelector = new Atf.UI.DateTimeSelector();
             this.lblCurrentDeviceTime = new System.Windows.Forms.Label();
             this.btnHidAfterExpirationToggle = new System.Windows.Forms.Button();
+            this.btnBuzzerStatusToggle = new System.Windows.Forms.Button();
             this.currentTimeTitle = new System.Windows.Forms.Label();
             this.groupUsers = new System.Windows.Forms.GroupBox();
             this.dgvUsers = new System.Windows.Forms.DataGridView();
@@ -197,7 +198,7 @@ namespace SafeDoc.UI
             // lblConnection
             // 
             this.lblConnection.AutoSize = true;
-            this.lblConnection.Location = new System.Drawing.Point(737, 544);
+            this.lblConnection.Location = new System.Drawing.Point(737, 577);
             this.lblConnection.Name = "lblConnection";
             this.lblConnection.Size = new System.Drawing.Size(194, 16);
             this.lblConnection.TabIndex = 7;
@@ -207,7 +208,7 @@ namespace SafeDoc.UI
             // chkClearSavedAccessKey
             //
             this.chkClearSavedAccessKey.AutoSize = true;
-            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(12, 542);
+            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(12, 575);
             this.chkClearSavedAccessKey.Name = "chkClearSavedAccessKey";
             this.chkClearSavedAccessKey.Size = new System.Drawing.Size(160, 20);
             this.chkClearSavedAccessKey.TabIndex = 8;
@@ -421,11 +422,12 @@ namespace SafeDoc.UI
             this.groupSettings.Controls.Add(this.deviceDateSelector);
             this.groupSettings.Controls.Add(this.lblCurrentDeviceTime);
             this.groupSettings.Controls.Add(this.btnHidAfterExpirationToggle);
+            this.groupSettings.Controls.Add(this.btnBuzzerStatusToggle);
             this.groupSettings.Controls.Add(this.currentTimeTitle);
             this.groupSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
             this.groupSettings.Location = new System.Drawing.Point(12, 414);
             this.groupSettings.Name = "groupSettings";
-            this.groupSettings.Size = new System.Drawing.Size(922, 127);
+            this.groupSettings.Size = new System.Drawing.Size(922, 160);
             this.groupSettings.TabIndex = 3;
             this.groupSettings.TabStop = false;
             this.groupSettings.Text = "تنظیمات دستگاه";
@@ -564,7 +566,21 @@ namespace SafeDoc.UI
             this.btnHidAfterExpirationToggle.Text = "فعال‌بودن HID پس از انقضا (فعال)";
             this.btnHidAfterExpirationToggle.UseVisualStyleBackColor = false;
             this.btnHidAfterExpirationToggle.Click += new System.EventHandler(this.btnHidAfterExpirationToggle_Click);
-            // 
+            //
+            // btnBuzzerStatusToggle
+            //
+            this.btnBuzzerStatusToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
+            this.btnBuzzerStatusToggle.FlatAppearance.BorderSize = 0;
+            this.btnBuzzerStatusToggle.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBuzzerStatusToggle.ForeColor = System.Drawing.Color.White;
+            this.btnBuzzerStatusToggle.Location = new System.Drawing.Point(489, 112);
+            this.btnBuzzerStatusToggle.Name = "btnBuzzerStatusToggle";
+            this.btnBuzzerStatusToggle.Size = new System.Drawing.Size(234, 27);
+            this.btnBuzzerStatusToggle.TabIndex = 14;
+            this.btnBuzzerStatusToggle.Text = "صدای بازر (وضعیت نامشخص)";
+            this.btnBuzzerStatusToggle.UseVisualStyleBackColor = false;
+            this.btnBuzzerStatusToggle.Click += new System.EventHandler(this.btnBuzzerStatusToggle_Click);
+            //
             // currentTimeTitle
             // 
             this.currentTimeTitle.AutoSize = true;

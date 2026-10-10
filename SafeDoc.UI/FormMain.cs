@@ -19,8 +19,10 @@ namespace SafeDoc.UI
         private bool _approvedDeviceWasPresent;
         private bool _sendEnterAfterPassword;
         private bool _keepHidAfterExpiration;
+        private bool _buzzerStatus;
         private bool _enterStatusIsKnown;
         private bool _hidStatusIsKnown;
+        private bool _buzzerStatusIsKnown;
         private bool _deviceIsConnected;
         private bool _operationInProgress;
         private bool _isConnecting;
@@ -83,6 +85,12 @@ namespace SafeDoc.UI
                 _keepHidAfterExpiration,
                 _hidStatusIsKnown,
                 "فعال‌بودن HID پس از انقضا"
+            );
+            UpdateToggleButton(
+                btnBuzzerStatusToggle,
+                _buzzerStatus,
+                _buzzerStatusIsKnown,
+                "صدای بازر"
             );
         }
         private static void UpdateToggleButton(Button button, bool enabled, bool statusIsKnown, string operationName)
@@ -199,6 +207,7 @@ namespace SafeDoc.UI
                 _approvedDeviceWasPresent = true;
                 _enterStatusIsKnown = false;
                 _hidStatusIsKnown = false;
+                _buzzerStatusIsKnown = false;
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
@@ -236,6 +245,7 @@ namespace SafeDoc.UI
                 _approvedDeviceWasPresent = true;
                 _enterStatusIsKnown = false;
                 _hidStatusIsKnown = false;
+                _buzzerStatusIsKnown = false;
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("توکن دستگاه تأیید شد.", true);
@@ -273,6 +283,7 @@ namespace SafeDoc.UI
             {
                 _enterStatusIsKnown = false;
                 _hidStatusIsKnown = false;
+                _buzzerStatusIsKnown = false;
                 UpdateToggleButtons();
             }
 
@@ -1691,6 +1702,35 @@ namespace SafeDoc.UI
             SaveHidStatus();
         }
 
+        private void SaveBuzzerStatus()
+        {
+            if (Ready() == false)
+            {
+                return;
+            }
+
+            try
+            {
+                SafeDocResponse response = _operations.SetBuzzerStatus(_buzzerStatus);
+                ShowDeviceResponse(response);
+                _buzzerStatusIsKnown = response.isSuccess;
+                UpdateToggleButtons();
+            }
+            catch (Exception exception)
+            {
+                _buzzerStatusIsKnown = false;
+                UpdateToggleButtons();
+                Status("ذخیره وضعیت بازر انجام نشد: " + exception.Message, false);
+            }
+        }
+
+        private void ToggleBuzzerStatus()
+        {
+            _buzzerStatus = _buzzerStatus == false;
+            UpdateToggleButtons();
+            SaveBuzzerStatus();
+        }
+
         private void ReadDeviceSettings()
         {
             try
@@ -1707,6 +1747,8 @@ namespace SafeDoc.UI
                 _enterStatusIsKnown = true;
                 _keepHidAfterExpiration = settings.HidStatusAfterExpiration;
                 _hidStatusIsKnown = true;
+                _buzzerStatus = settings.BuzzerStatus;
+                _buzzerStatusIsKnown = true;
                 txtUsbTimeout.Text = settings.UsbConnectionTimeoutValue.ToString();
                 ShowCurrentDeviceDateTime(settings);
                 UpdateToggleButtons();
@@ -1808,6 +1850,11 @@ namespace SafeDoc.UI
         private void btnHidAfterExpirationToggle_Click(object sender, EventArgs e)
         {
             ToggleHidAfterExpiration();
+        }
+
+        private void btnBuzzerStatusToggle_Click(object sender, EventArgs e)
+        {
+            ToggleBuzzerStatus();
         }
 
         private void deviceClockTimer_Tick(object sender, EventArgs e)

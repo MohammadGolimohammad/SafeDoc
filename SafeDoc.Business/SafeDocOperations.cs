@@ -245,6 +245,19 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetHidStatusAfterExpiration);
         }
 
+        public SafeDocResponse SetBuzzerStatus(bool enabled)
+        {
+            return Send(
+                SafeDocCommandType.SetBuzzerStatus,
+                new { buzzerStatus = enabled }
+            );
+        }
+
+        public SafeDocResponse GetBuzzerStatus()
+        {
+            return Send(SafeDocCommandType.GetBuzzerStatus);
+        }
+
         private SafeDocResponse Send(SafeDocCommandType type, params object[] data)
         {
             return Send(type, _commandTimeoutMilliseconds, data);
