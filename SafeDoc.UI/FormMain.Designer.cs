@@ -44,8 +44,8 @@ namespace SafeDoc.UI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.connectionWatchTimer = new System.Windows.Forms.Timer(this.components);
             this.deviceClockTimer = new System.Windows.Forms.Timer(this.components);
             this.pnlMain = new System.Windows.Forms.Panel();
@@ -53,9 +53,9 @@ namespace SafeDoc.UI
             this.operationStatusStrip = new System.Windows.Forms.StatusStrip();
             this.lblOperationProgress = new System.Windows.Forms.ToolStripStatusLabel();
             this.operationProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.txtOperationLog = new System.Windows.Forms.RichTextBox();
             this.lblOperationProgressText = new System.Windows.Forms.Label();
             this.operationProgressBarLarge = new System.Windows.Forms.ProgressBar();
-            this.txtOperationLog = new System.Windows.Forms.RichTextBox();
             this.lblConnection = new System.Windows.Forms.Label();
             this.chkClearSavedAccessKey = new System.Windows.Forms.CheckBox();
             this.groupFingerprint = new System.Windows.Forms.GroupBox();
@@ -155,15 +155,13 @@ namespace SafeDoc.UI
             // 
             this.pnlMain.AutoScroll = true;
             this.pnlMain.Controls.Add(this.connection);
-            this.pnlMain.Controls.Add(this.lblConnection);
-            this.pnlMain.Controls.Add(this.chkClearSavedAccessKey);
             this.pnlMain.Controls.Add(this.groupFingerprint);
             this.pnlMain.Controls.Add(this.groupSettings);
             this.pnlMain.Controls.Add(this.groupUsers);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMain.Location = new System.Drawing.Point(0, 0);
             this.pnlMain.Name = "pnlMain";
-            this.pnlMain.Size = new System.Drawing.Size(946, 623);
+            this.pnlMain.Size = new System.Drawing.Size(946, 689);
             this.pnlMain.TabIndex = 0;
             // 
             // connection
@@ -193,7 +191,7 @@ namespace SafeDoc.UI
             this.operationStatusStrip.Name = "operationStatusStrip";
             this.operationStatusStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
             this.operationStatusStrip.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.operationStatusStrip.Size = new System.Drawing.Size(916, 28);
+            this.operationStatusStrip.Size = new System.Drawing.Size(649, 28);
             this.operationStatusStrip.TabIndex = 1;
             this.operationStatusStrip.Visible = false;
             // 
@@ -212,35 +210,12 @@ namespace SafeDoc.UI
             this.operationProgressBar.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.operationProgressBar.Size = new System.Drawing.Size(200, 22);
             this.operationProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            //
-            // operationProgressBarLarge
-            //
-            this.operationProgressBarLarge.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.operationProgressBarLarge.Location = new System.Drawing.Point(14, 24);
-            this.operationProgressBarLarge.MarqueeAnimationSpeed = 30;
-            this.operationProgressBarLarge.Name = "operationProgressBarLarge";
-            this.operationProgressBarLarge.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.operationProgressBarLarge.RightToLeftLayout = true;
-            this.operationProgressBarLarge.Size = new System.Drawing.Size(894, 22);
-            this.operationProgressBarLarge.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.operationProgressBarLarge.TabIndex = 2;
-            this.operationProgressBarLarge.Value = 100;
-            //
-            // lblOperationProgressText
-            //
-            this.lblOperationProgressText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblOperationProgressText.AutoEllipsis = true;
-            this.lblOperationProgressText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.lblOperationProgressText.Location = new System.Drawing.Point(14, 51);
-            this.lblOperationProgressText.Name = "lblOperationProgressText";
-            this.lblOperationProgressText.Size = new System.Drawing.Size(894, 20);
-            this.lblOperationProgressText.TabIndex = 3;
-            this.lblOperationProgressText.Text = "آماده انجام عملیات";
-            this.lblOperationProgressText.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            //
+            // 
             // txtOperationLog
-            //
-            this.txtOperationLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            // 
+            this.txtOperationLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOperationLog.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
             this.txtOperationLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtOperationLog.Font = new System.Drawing.Font("Shabnam FD", 8.25F);
@@ -250,14 +225,41 @@ namespace SafeDoc.UI
             this.txtOperationLog.ReadOnly = true;
             this.txtOperationLog.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.txtOperationLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
-            this.txtOperationLog.Size = new System.Drawing.Size(894, 82);
+            this.txtOperationLog.Size = new System.Drawing.Size(894, 96);
             this.txtOperationLog.TabIndex = 4;
             this.txtOperationLog.Text = "";
+            // 
+            // lblOperationProgressText
+            // 
+            this.lblOperationProgressText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblOperationProgressText.AutoEllipsis = true;
+            this.lblOperationProgressText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.lblOperationProgressText.Location = new System.Drawing.Point(14, 20);
+            this.lblOperationProgressText.Name = "lblOperationProgressText";
+            this.lblOperationProgressText.Size = new System.Drawing.Size(894, 20);
+            this.lblOperationProgressText.TabIndex = 3;
+            this.lblOperationProgressText.Text = "آماده انجام عملیات";
+            this.lblOperationProgressText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // operationProgressBarLarge
+            // 
+            this.operationProgressBarLarge.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.operationProgressBarLarge.Location = new System.Drawing.Point(14, 43);
+            this.operationProgressBarLarge.MarqueeAnimationSpeed = 30;
+            this.operationProgressBarLarge.Name = "operationProgressBarLarge";
+            this.operationProgressBarLarge.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.operationProgressBarLarge.RightToLeftLayout = true;
+            this.operationProgressBarLarge.Size = new System.Drawing.Size(894, 22);
+            this.operationProgressBarLarge.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.operationProgressBarLarge.TabIndex = 2;
+            this.operationProgressBarLarge.Value = 100;
             // 
             // lblConnection
             // 
             this.lblConnection.AutoSize = true;
-            this.lblConnection.Location = new System.Drawing.Point(737, 702);
+            this.lblConnection.Location = new System.Drawing.Point(677, 118);
             this.lblConnection.Name = "lblConnection";
             this.lblConnection.Size = new System.Drawing.Size(194, 16);
             this.lblConnection.TabIndex = 7;
@@ -267,7 +269,7 @@ namespace SafeDoc.UI
             // chkClearSavedAccessKey
             // 
             this.chkClearSavedAccessKey.AutoSize = true;
-            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(12, 705);
+            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(489, 116);
             this.chkClearSavedAccessKey.Name = "chkClearSavedAccessKey";
             this.chkClearSavedAccessKey.Size = new System.Drawing.Size(152, 20);
             this.chkClearSavedAccessKey.TabIndex = 8;
@@ -307,7 +309,7 @@ namespace SafeDoc.UI
             // lblPasswordStrength
             // 
             this.lblPasswordStrength.AutoSize = true;
-            this.lblPasswordStrength.Location = new System.Drawing.Point(503, 70);
+            this.lblPasswordStrength.Location = new System.Drawing.Point(460, 70);
             this.lblPasswordStrength.Name = "lblPasswordStrength";
             this.lblPasswordStrength.Size = new System.Drawing.Size(65, 16);
             this.lblPasswordStrength.TabIndex = 10;
@@ -316,7 +318,7 @@ namespace SafeDoc.UI
             // pnlPasswordStrengthWeak
             // 
             this.pnlPasswordStrengthWeak.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.pnlPasswordStrengthWeak.Location = new System.Drawing.Point(366, 64);
+            this.pnlPasswordStrengthWeak.Location = new System.Drawing.Point(353, 55);
             this.pnlPasswordStrengthWeak.Name = "pnlPasswordStrengthWeak";
             this.pnlPasswordStrengthWeak.Size = new System.Drawing.Size(32, 7);
             this.pnlPasswordStrengthWeak.TabIndex = 11;
@@ -324,7 +326,7 @@ namespace SafeDoc.UI
             // pnlPasswordStrengthMedium
             // 
             this.pnlPasswordStrengthMedium.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.pnlPasswordStrengthMedium.Location = new System.Drawing.Point(402, 64);
+            this.pnlPasswordStrengthMedium.Location = new System.Drawing.Point(389, 55);
             this.pnlPasswordStrengthMedium.Name = "pnlPasswordStrengthMedium";
             this.pnlPasswordStrengthMedium.Size = new System.Drawing.Size(32, 7);
             this.pnlPasswordStrengthMedium.TabIndex = 12;
@@ -332,7 +334,7 @@ namespace SafeDoc.UI
             // pnlPasswordStrengthStrong
             // 
             this.pnlPasswordStrengthStrong.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.pnlPasswordStrengthStrong.Location = new System.Drawing.Point(438, 64);
+            this.pnlPasswordStrengthStrong.Location = new System.Drawing.Point(425, 55);
             this.pnlPasswordStrengthStrong.Name = "pnlPasswordStrengthStrong";
             this.pnlPasswordStrengthStrong.Size = new System.Drawing.Size(32, 7);
             this.pnlPasswordStrengthStrong.TabIndex = 13;
@@ -452,7 +454,7 @@ namespace SafeDoc.UI
             this.btnCancelUser.ForeColor = System.Drawing.Color.White;
             this.btnCancelUser.Location = new System.Drawing.Point(22, 62);
             this.btnCancelUser.Name = "btnCancelUser";
-            this.btnCancelUser.Size = new System.Drawing.Size(113, 24);
+            this.btnCancelUser.Size = new System.Drawing.Size(96, 24);
             this.btnCancelUser.TabIndex = 6;
             this.btnCancelUser.Text = "انصراف";
             this.btnCancelUser.UseVisualStyleBackColor = false;
@@ -498,9 +500,9 @@ namespace SafeDoc.UI
             this.btnEnrollFingerprint.FlatAppearance.BorderSize = 0;
             this.btnEnrollFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEnrollFingerprint.ForeColor = System.Drawing.Color.White;
-            this.btnEnrollFingerprint.Location = new System.Drawing.Point(141, 62);
+            this.btnEnrollFingerprint.Location = new System.Drawing.Point(124, 62);
             this.btnEnrollFingerprint.Name = "btnEnrollFingerprint";
-            this.btnEnrollFingerprint.Size = new System.Drawing.Size(117, 24);
+            this.btnEnrollFingerprint.Size = new System.Drawing.Size(96, 24);
             this.btnEnrollFingerprint.TabIndex = 5;
             this.btnEnrollFingerprint.Text = "ذخیره";
             this.btnEnrollFingerprint.UseVisualStyleBackColor = false;
@@ -512,7 +514,7 @@ namespace SafeDoc.UI
             this.btnIdentifyFingerprint.FlatAppearance.BorderSize = 0;
             this.btnIdentifyFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnIdentifyFingerprint.ForeColor = System.Drawing.Color.White;
-            this.btnIdentifyFingerprint.Location = new System.Drawing.Point(264, 62);
+            this.btnIdentifyFingerprint.Location = new System.Drawing.Point(226, 62);
             this.btnIdentifyFingerprint.Name = "btnIdentifyFingerprint";
             this.btnIdentifyFingerprint.Size = new System.Drawing.Size(96, 24);
             this.btnIdentifyFingerprint.TabIndex = 14;
@@ -524,6 +526,8 @@ namespace SafeDoc.UI
             // 
             this.groupSettings.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
             this.groupSettings.Controls.Add(this.date);
+            this.groupSettings.Controls.Add(this.chkClearSavedAccessKey);
+            this.groupSettings.Controls.Add(this.lblConnection);
             this.groupSettings.Controls.Add(this.usb);
             this.groupSettings.Controls.Add(this.btnSetDateTime);
             this.groupSettings.Controls.Add(this.btnEnterStatusToggle);
@@ -539,7 +543,7 @@ namespace SafeDoc.UI
             this.groupSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
             this.groupSettings.Location = new System.Drawing.Point(12, 539);
             this.groupSettings.Name = "groupSettings";
-            this.groupSettings.Size = new System.Drawing.Size(922, 160);
+            this.groupSettings.Size = new System.Drawing.Size(922, 146);
             this.groupSettings.TabIndex = 3;
             this.groupSettings.TabStop = false;
             this.groupSettings.Text = "تنظیمات دستگاه";
@@ -685,9 +689,9 @@ namespace SafeDoc.UI
             this.btnBuzzerStatusToggle.FlatAppearance.BorderSize = 0;
             this.btnBuzzerStatusToggle.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBuzzerStatusToggle.ForeColor = System.Drawing.Color.White;
-            this.btnBuzzerStatusToggle.Location = new System.Drawing.Point(489, 112);
+            this.btnBuzzerStatusToggle.Location = new System.Drawing.Point(6, 113);
             this.btnBuzzerStatusToggle.Name = "btnBuzzerStatusToggle";
-            this.btnBuzzerStatusToggle.Size = new System.Drawing.Size(234, 27);
+            this.btnBuzzerStatusToggle.Size = new System.Drawing.Size(474, 27);
             this.btnBuzzerStatusToggle.TabIndex = 14;
             this.btnBuzzerStatusToggle.Text = "صدای بازر (وضعیت نامشخص)";
             this.btnBuzzerStatusToggle.UseVisualStyleBackColor = false;
@@ -722,14 +726,14 @@ namespace SafeDoc.UI
             this.dgvUsers.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvUsers.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
             this.dgvUsers.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Shabnam FD", 9F);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvUsers.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Shabnam FD", 9F);
+            dataGridViewCellStyle5.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvUsers.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.dgvUsers.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColumnUserId,
             this.ColumnUserName,
@@ -743,14 +747,14 @@ namespace SafeDoc.UI
             this.ColumnDelete,
             this.ColumnFingerprint,
             this.ColumnFingerprintStatus});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Shabnam FD", 9F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(64)))), ((int)(((byte)(175)))));
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvUsers.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Shabnam FD", 9F);
+            dataGridViewCellStyle6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(64)))), ((int)(((byte)(175)))));
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvUsers.DefaultCellStyle = dataGridViewCellStyle6;
             this.dgvUsers.Location = new System.Drawing.Point(14, 23);
             this.dgvUsers.MultiSelect = false;
             this.dgvUsers.Name = "dgvUsers";
@@ -1159,7 +1163,7 @@ namespace SafeDoc.UI
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(24)))), ((int)(((byte)(39)))));
-            this.ClientSize = new System.Drawing.Size(946, 623);
+            this.ClientSize = new System.Drawing.Size(946, 689);
             this.Controls.Add(this.pnlMain);
             this.Font = new System.Drawing.Font("Shabnam FD", 9F);
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
@@ -1173,7 +1177,6 @@ namespace SafeDoc.UI
             this.Load += new System.EventHandler(this.FormMain_Load);
             this.Shown += new System.EventHandler(this.FormMain_Shown);
             this.pnlMain.ResumeLayout(false);
-            this.pnlMain.PerformLayout();
             this.connection.ResumeLayout(false);
             this.connection.PerformLayout();
             this.operationStatusStrip.ResumeLayout(false);
