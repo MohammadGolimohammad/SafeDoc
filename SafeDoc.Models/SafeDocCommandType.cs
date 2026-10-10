@@ -37,5 +37,12 @@ namespace SafeDoc.Models
 
         GetAllUsers = 19,
         GetUser = 20,
+
+        SavePerson = 21,
+        SetBuzzerStatus = 22,
+        GetBuzzerStatus = 23,
+        GetAllSettings = 24,
+        CheckToken = 25,
+        GetUserId = 26,
     }
 }

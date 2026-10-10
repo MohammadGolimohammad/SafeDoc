@@ -141,6 +141,31 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetUser, User(userId));
         }
 
+        public SafeDocResponse SavePerson(
+            string userId,
+            string userName,
+            string password,
+            long expirationTimestamp,
+            bool useUsbFlash,
+            int usbUseCount
+        )
+        {
+            return Send(
+                SafeDocCommandType.SavePerson,
+                User(userId),
+                new { passName = userName },
+                new { passValue = password },
+                new { expirationTimestamp = expirationTimestamp },
+                new { useUsbFlash = useUsbFlash },
+                new { usbUseCount = usbUseCount }
+            );
+        }
+
+        public SafeDocResponse GetAllSettings()
+        {
+            return Send(SafeDocCommandType.GetAllSettings);
+        }
+
         public SafeDocResponse SetEnterStatus(bool enabled)
         {
             return Send(SafeDocCommandType.SetEnterStatusInHID, new { enterStatus = enabled });

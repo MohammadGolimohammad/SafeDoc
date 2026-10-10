@@ -42,6 +42,7 @@ namespace SafeDoc.UI
         private const string ApprovedProductId = "PID_4014";
         private const int ApprovedDeviceBaudRate = 115200;
         private const int DeviceReadyDelayMilliseconds = 1000;
+        private const int DefaultUsbUseCount = 1;
 
         public FormMain()
         {
@@ -186,16 +187,9 @@ namespace SafeDoc.UI
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
                 await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadEnterStatusFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadHidStatusFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadUsbTimeoutFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadCurrentDeviceDateTime();
+                ReadDeviceSettings();
                 await Task.Delay(DeviceReadyDelayMilliseconds);
                 ReadUsersFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
                 SetConnected(true);
             }
             catch (Exception ex)
@@ -554,10 +548,9 @@ namespace SafeDoc.UI
                 else
                 {
                     ShowDeviceResponse(response, false, completeOperation);
-                    HashSet<int> flashPermissionUserIds = LoadFlashPermissionUserIds();
                     _deviceUsers.Clear();
                     _selectedUser = null;
-                    AddDeviceUsersToGrid(response, flashPermissionUserIds);
+                    AddDeviceUsersToGrid(response);
 
                     dgvUsers.Refresh();
                     ApplyFingerprintRowColors();
@@ -613,7 +606,66 @@ namespace SafeDoc.UI
             return string.IsNullOrWhiteSpace(value) ? "—" : value;
         }
 
-        private void AddDeviceUsersToGrid(SafeDocResponse response, HashSet<int> flashPermissionUserIds)
+        private static bool ReadDeviceUserBoolean(JObject deviceUser, params string[] names)
+        {
+            JToken valueToken = ReadDeviceUserToken(deviceUser, names);
+            if (valueToken == null)
+            {
+                return false;
+            }
+
+            bool value;
+            if (bool.TryParse(valueToken.ToString(), out value))
+            {
+                return value;
+            }
+
+            return valueToken.ToString() == "1";
+        }
+
+        private static int ReadDeviceUserNumber(JObject deviceUser, params string[] names)
+        {
+            JToken valueToken = ReadDeviceUserToken(deviceUser, names);
+            int value;
+            if (valueToken == null || int.TryParse(NormalizeDigits(valueToken.ToString()), out value) == false)
+            {
+                return 0;
+            }
+
+            return value;
+        }
+
+        private static void SetUserExpirationFromDevice(SafeDocUserRow user, JObject deviceUser)
+        {
+            JToken timestampToken = ReadDeviceUserToken(
+                deviceUser,
+                "expire",
+                "expirationTimestamp"
+            );
+            long timestamp;
+            if (
+                timestampToken == null
+                || long.TryParse(NormalizeDigits(timestampToken.ToString()), out timestamp) == false
+                || timestamp <= 0
+            )
+            {
+                user.ExpireDate = "بدون انقضا";
+                user.ExpireTime = "—";
+                return;
+            }
+
+            DateTime expiration = DateTimeOffset.FromUnixTimeSeconds(timestamp).LocalDateTime;
+            PersianCalendar calendar = new PersianCalendar();
+            user.ExpireDate = string.Format(
+                "{0:0000}/{1:00}/{2:00}",
+                calendar.GetYear(expiration),
+                calendar.GetMonth(expiration),
+                calendar.GetDayOfMonth(expiration)
+            );
+            user.ExpireTime = expiration.ToString("HH:mm");
+        }
+
+        private void AddDeviceUsersToGrid(SafeDocResponse response)
         {
             List<object> deviceUsers = response.resultData ?? new List<object>();
             foreach (object item in deviceUsers)
@@ -631,11 +683,11 @@ namespace SafeDoc.UI
                     }
                 }
 
-                AddDeviceUsersFromToken(token, flashPermissionUserIds);
+                AddDeviceUsersFromToken(token);
             }
         }
 
-        private void AddDeviceUsersFromToken(JToken token, HashSet<int> flashPermissionUserIds)
+        private void AddDeviceUsersFromToken(JToken token)
         {
             if (token == null)
             {
@@ -647,7 +699,7 @@ namespace SafeDoc.UI
             {
                 foreach (JToken userToken in usersArray)
                 {
-                    AddDeviceUsersFromToken(userToken, flashPermissionUserIds);
+                    AddDeviceUsersFromToken(userToken);
                 }
 
                 return;
@@ -661,17 +713,17 @@ namespace SafeDoc.UI
 
             if (ReadDeviceUserToken(userObject, "userId", "id") != null)
             {
-                AddDeviceUserToGrid(userObject, flashPermissionUserIds);
+                AddDeviceUserToGrid(userObject);
                 return;
             }
 
             foreach (JProperty property in userObject.Properties())
             {
-                AddDeviceUsersFromToken(property.Value, flashPermissionUserIds);
+                AddDeviceUsersFromToken(property.Value);
             }
         }
 
-        private void AddDeviceUserToGrid(JObject deviceUser, HashSet<int> flashPermissionUserIds)
+        private void AddDeviceUserToGrid(JObject deviceUser)
         {
             if (deviceUser == null)
             {
@@ -696,18 +748,19 @@ namespace SafeDoc.UI
                 }
             }
 
-            _deviceUsers.Add(
-                new SafeDocUserRow
-                {
-                    UserId = userId,
-                    FingerprintStatus = "ثبت شده",
-                    UserName = ReadDeviceUserValue(deviceUser, "userName", "passName", "name"),
-                    Pass = ReadDeviceUserValue(deviceUser, "pass", "passValue", "password"),
-                    ExpireDate = ReadDeviceUserValue(deviceUser, "expireDate", "expirationDate", "expiryDate"),
-                    ExpireTime = ReadDeviceUserValue(deviceUser, "expireTime", "expirationTime", "expiryTime"),
-                    FlashPermission = flashPermissionUserIds.Contains(userId)
-                }
-            );
+            SafeDocUserRow user = new SafeDocUserRow
+            {
+                UserId = userId,
+                FingerprintStatus = "ثبت شده",
+                UserName = ReadDeviceUserValue(deviceUser, "userName", "passName", "name"),
+                Pass = ReadDeviceUserValue(deviceUser, "pass", "passValue", "password"),
+                FlashPermission = ReadDeviceUserBoolean(deviceUser, "isUseFlash", "useUsbFlash"),
+                UsbUseCount = ReadDeviceUserNumber(deviceUser, "useUsbFlashCount", "usbUseCount"),
+                UsbUsedTimes = ReadDeviceUserNumber(deviceUser, "usbUsedTimes")
+            };
+
+            SetUserExpirationFromDevice(user, deviceUser);
+            _deviceUsers.Add(user);
         }
 
         private void ReadUserFromDevice(int userId)
@@ -732,7 +785,7 @@ namespace SafeDoc.UI
                     }
                 }
 
-                AddDeviceUsersToGrid(response, LoadFlashPermissionUserIds());
+                AddDeviceUsersToGrid(response);
                 dgvUsers.Refresh();
                 ApplyFingerprintRowColors();
                 Status("کاربر تکراری با شناسه " + userId + " از دستگاه خوانده و در گرید نمایش داده شد.", true);
@@ -1108,6 +1161,7 @@ namespace SafeDoc.UI
                 _selectedUser.ExpireDate = GetSelectedExpirationDate();
                 _selectedUser.ExpireTime = NormalizeDigits(txtExpirationTime.Text);
                 _selectedUser.FlashPermission = chkFlashPermission.Checked;
+                _selectedUser.UsbUseCount = GetUsbUseCountForSave(_selectedUser);
             }
             else
             {
@@ -1127,7 +1181,8 @@ namespace SafeDoc.UI
                         ExpireDate = GetSelectedExpirationDate(),
                         ExpireTime = NormalizeDigits(txtExpirationTime.Text),
                         FingerprintStatus = "ثبت نشده",
-                        FlashPermission = chkFlashPermission.Checked
+                        FlashPermission = chkFlashPermission.Checked,
+                        UsbUseCount = chkFlashPermission.Checked ? DefaultUsbUseCount : 0
                     }
                 );
             }
@@ -1137,6 +1192,21 @@ namespace SafeDoc.UI
             ApplyFingerprintRowColors();
             CancelUserOperation();
             Status(isEditing ? "ویرایش کاربر در گرید ذخیره شد." : "کاربر جدید در گرید ذخیره شد.", true);
+        }
+
+        private int GetUsbUseCountForSave(SafeDocUserRow user)
+        {
+            if (user.FlashPermission == false)
+            {
+                return 0;
+            }
+
+            if (user.UsbUseCount > 0)
+            {
+                return user.UsbUseCount;
+            }
+
+            return DefaultUsbUseCount;
         }
 
         private string GetSelectedExpirationDate()
@@ -1175,7 +1245,6 @@ namespace SafeDoc.UI
             {
                 if (user.FingerprintStatus == "ثبت شده")
                 {
-                    Task.Delay(3000);
                     SafeDocResponse deletePasswordsResponse = _operations.DeleteAllPasswords(
                         user.UserId.Value.ToString()
                     );
@@ -1185,7 +1254,6 @@ namespace SafeDoc.UI
                         EndOperationLoading();
                         return;
                     }
-                    Task.Delay(3000);
                     SafeDocResponse deleteFingerprintResponse = _operations.DeleteFingerprint(
                         user.UserId.Value.ToString()
                     );
@@ -1196,7 +1264,6 @@ namespace SafeDoc.UI
                         return;
                     }
                 }
-                Task.Delay(3000);
                 Status("اثر انگشت کاربر " + user.UserId + " را روی دستگاه قرار دهید.", true);
                 SafeDocResponse enrollResponse = _operations.EnrollFingerprint(user.UserId.Value.ToString());
                 ShowDeviceResponse(enrollResponse, true, false);
@@ -1205,37 +1272,27 @@ namespace SafeDoc.UI
                     EndOperationLoading();
                     return;
                 }
-                Task.Delay(3000);
-                SafeDocResponse passwordResponse = _operations.AddPassword(
+                SafeDocResponse savePersonResponse = _operations.SavePerson(
                     user.UserId.Value.ToString(),
                     user.UserName,
-                    user.Pass
+                    user.Pass,
+                    expirationTimestamp,
+                    user.FlashPermission,
+                    GetUsbUseCountForSave(user)
                 );
-                ShowDeviceResponse(passwordResponse, true, false);
-                if (passwordResponse.isSuccess == false)
+                ShowDeviceResponse(savePersonResponse, true, false);
+                if (savePersonResponse.isSuccess == false)
                 {
                     DeleteIncompleteFingerprint(user.UserId.Value.ToString());
                     EndOperationLoading();
                     return;
                 }
-                Task.Delay(DeviceReadyDelayMilliseconds);
-                SafeDocResponse expirationResponse = _operations.SetExpiration(
-                    user.UserId.Value.ToString(),
-                    expirationTimestamp
-                );
-                ShowDeviceResponse(expirationResponse, true, false);
-                if (expirationResponse.isSuccess == false)
-                {
-                    EndOperationLoading();
-                    return;
-                }
 
                 user.FingerprintStatus = "ثبت شده";
-                SaveFlashPermission(user.UserId.Value, user.FlashPermission);
                 dgvUsers.Refresh();
                 ApplyFingerprintRowColors();
                 EndOperationLoading();
-                Status("اثر انگشت، رمز و تاریخ انقضای کاربر ثبت شد.", true);
+                Status("اثر انگشت ثبت شد و اطلاعات کامل کاربر با یک درخواست ذخیره شد.", true);
             }
             catch (Exception exception)
             {
@@ -1890,6 +1947,46 @@ namespace SafeDoc.UI
             _keepHidAfterExpiration = _keepHidAfterExpiration == false;
             UpdateToggleButtons();
             SaveHidStatus();
+        }
+
+        private void ReadDeviceSettings()
+        {
+            try
+            {
+                SafeDocResponse response = _operations.GetAllSettings();
+                ShowDeviceResponse(response, false, false);
+                if (response == null || response.isSuccess == false)
+                {
+                    return;
+                }
+
+                bool enabled;
+                if (TryReadDeviceBoolean(response, "enterStatus", out enabled))
+                {
+                    _sendEnterAfterPassword = enabled;
+                    _enterStatusIsKnown = true;
+                }
+
+                if (TryReadDeviceBoolean(response, "HidStatusAfterExpiration", out enabled))
+                {
+                    _keepHidAfterExpiration = enabled;
+                    _hidStatusIsKnown = true;
+                }
+
+                int timeout;
+                if (TryReadDeviceNumber(response, "usbConnectionTimeoutValue", out timeout))
+                {
+                    txtUsbTimeout.Text = timeout.ToString();
+                }
+
+                ShowCurrentDeviceDateTime(response);
+                UpdateToggleButtons();
+                Status("تنظیمات کامل دستگاه با یک درخواست خوانده شد.", true);
+            }
+            catch (Exception exception)
+            {
+                Status("خواندن تنظیمات کامل دستگاه انجام نشد: " + exception.Message, false);
+            }
         }
 
         private void ReadEnterStatusFromDevice()
