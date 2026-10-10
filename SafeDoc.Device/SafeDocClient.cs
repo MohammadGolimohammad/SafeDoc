@@ -156,6 +156,7 @@ namespace SafeDoc.Device
                 _receivedText.Append(receivedPart);
                 string receivedJson = _receivedText.ToString().Trim('\0', ' ', '\r', '\n', '\t');
                 receivedJson = NormalizeSettingsResponse(receivedJson);
+                receivedJson = NormalizeFingerprintUserResponse(receivedJson);
                 if (IsCompleteJson(receivedJson) == false)
                 {
                     return;
@@ -200,6 +201,20 @@ namespace SafeDoc.Device
             );
 
             return normalizedJson;
+        }
+
+        private static string NormalizeFingerprintUserResponse(string receivedJson)
+        {
+            if (receivedJson.IndexOf("\"userId\"", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return receivedJson;
+            }
+
+            return Regex.Replace(
+                receivedJson,
+                @"(""resultData""\s*:\s*)\[\s*""userId""\s*:\s*(-?\d+)\s*\]",
+                "$1[{\"userId\": $2}]"
+            );
         }
 
         private static bool IsCompleteJson(string text)
