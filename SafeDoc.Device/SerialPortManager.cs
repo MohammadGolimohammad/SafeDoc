@@ -40,8 +40,6 @@ namespace SafeDoc.Device
 
             _serialPort.Encoding = Encoding.UTF8;
             _serialPort.Handshake = Handshake.None;
-            _serialPort.DtrEnable = true;
-            _serialPort.RtsEnable = true;
 
             _serialPort.DataReceived += SerialPort_DataReceived;
         }

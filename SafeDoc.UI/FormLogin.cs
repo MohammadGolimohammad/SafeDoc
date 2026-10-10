@@ -7,6 +7,7 @@ namespace SafeDoc.UI
     {
         private bool _isEnglish;
         private bool _isLoginLoading;
+        private string _accessToken;
 
         public FormLogin()
         {
@@ -62,7 +63,7 @@ namespace SafeDoc.UI
             loginLoadingTimer.Stop();
             Hide();
 
-            using (FormMain mainForm = new FormMain())
+            using (FormMain mainForm = new FormMain(_accessToken))
             {
                 mainForm.ShowDialog();
             }
@@ -103,6 +104,14 @@ namespace SafeDoc.UI
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
+            _accessToken = txtAccessKey.Text.Trim();
+            if (string.IsNullOrWhiteSpace(_accessToken))
+            {
+                lblLoading.Text = "کلید ورود را وارد کنید.";
+                lblLoading.Visible = true;
+                return;
+            }
+
             StartLoginLoading();
         }
 
