@@ -104,10 +104,15 @@ namespace SafeDoc.UI
             DeviceConnectionService connection = null;
             try
             {
-                connection = new DeviceConnectionService(approvedPort, 115200);
+                connection = new DeviceConnectionService(approvedPort, DeviceConfiguration.BaudRate);
                 connection.Connect();
 
-                SafeDocOperations operations = new SafeDocOperations(connection);
+                SafeDocOperations operations = new SafeDocOperations(
+                    connection,
+                    DeviceConfiguration.CommandTimeoutMilliseconds,
+                    DeviceConfiguration.SettingsTimeoutMilliseconds,
+                    DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds
+                );
                 SafeDocResponse response = operations.CheckToken(_accessToken);
                 if (response.isSuccess)
                 {

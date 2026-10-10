@@ -35,10 +35,6 @@ namespace SafeDoc.UI
         private DateTime _deviceClockLocalReadAt;
         private bool _isFilteringFingerprintPassword;
 
-        private const int ApprovedDeviceBaudRate = 115200;
-        private const int DeviceReadyDelayMilliseconds = 1000;
-        private const int DefaultUsbUseCount = 1;
-
         public FormMain()
             : this(null)
         {
@@ -179,12 +175,12 @@ namespace SafeDoc.UI
                 CloseConnection();
                 DeviceConnectionService newConnection = new DeviceConnectionService(
                     approvedPort,
-                    ApprovedDeviceBaudRate
+                    DeviceConfiguration.BaudRate
                 );
                 _connection = newConnection;
                 newConnection.Connect();
 
-                Thread.Sleep(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
 
                 if (ReferenceEquals(_connection, newConnection) == false)
                 {
@@ -198,7 +194,7 @@ namespace SafeDoc.UI
                     return;
                 }
 
-                _operations = new SafeDocOperations(newConnection);
+                _operations = CreateOperations(newConnection);
                 _connectedApprovedPort = approvedPort;
                 _approvedDeviceWasPresent = true;
                 _enterStatusIsKnown = false;
@@ -206,9 +202,9 @@ namespace SafeDoc.UI
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
-                Thread.Sleep(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
                 ReadDeviceSettings();
-                Thread.Sleep(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
                 ReadUsersFromDevice();
                 SetConnected(true);
             }
@@ -235,7 +231,7 @@ namespace SafeDoc.UI
             try
             {
                 BeginOperationLoading("در حال آماده‌سازی دستگاه...");
-                _operations = new SafeDocOperations(_connection);
+                _operations = CreateOperations(_connection);
                 _connectedApprovedPort = _connection.PortName;
                 _approvedDeviceWasPresent = true;
                 _enterStatusIsKnown = false;
@@ -257,6 +253,16 @@ namespace SafeDoc.UI
             {
                 _isConnecting = false;
             }
+        }
+
+        private static SafeDocOperations CreateOperations(DeviceConnectionService connection)
+        {
+            return new SafeDocOperations(
+                connection,
+                DeviceConfiguration.CommandTimeoutMilliseconds,
+                DeviceConfiguration.SettingsTimeoutMilliseconds,
+                DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds
+            );
         }
 
         // وضعیت فرم
@@ -957,7 +963,9 @@ namespace SafeDoc.UI
                         ExpireTime = NormalizeDigits(txtExpirationTime.Text),
                         FingerprintStatus = "ثبت نشده",
                         FlashPermission = chkFlashPermission.Checked,
-                        UsbUseCount = chkFlashPermission.Checked ? DefaultUsbUseCount : 0
+                        UsbUseCount = chkFlashPermission.Checked
+                            ? DeviceConfiguration.DefaultUsbUseCount
+                            : 0
                     }
                 );
             }
@@ -981,7 +989,7 @@ namespace SafeDoc.UI
                 return user.UsbUseCount;
             }
 
-            return DefaultUsbUseCount;
+            return DeviceConfiguration.DefaultUsbUseCount;
         }
 
         private string GetSelectedExpirationDate()
@@ -1144,7 +1152,7 @@ namespace SafeDoc.UI
                 {
                     return;
                 }
-                Thread.Sleep(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
                 SafeDocResponse response = _operations.DeleteFingerprint(selectedUser.UserId.ToString());
                 ShowDeviceResponse(response);
                 if (response.isSuccess)
@@ -1339,7 +1347,7 @@ namespace SafeDoc.UI
 
                 if (response.isSuccess)
                 {
-                    Thread.Sleep(DeviceReadyDelayMilliseconds);
+                    Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
                     ReadCurrentDeviceDateTime();
                 }
             }

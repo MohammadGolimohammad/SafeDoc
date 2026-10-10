@@ -30,7 +30,7 @@ namespace SafeDoc.Device
 
         public SerialPortManager(
             string portName,
-            int baudRate = 115200,
+            int baudRate,
             Parity parity = Parity.None,
             int dataBits = 8,
             StopBits stopBits = StopBits.One

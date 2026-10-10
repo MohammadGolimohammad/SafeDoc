@@ -8,7 +8,7 @@ namespace SafeDoc.Business
     {
         private readonly SafeDocClient _client;
 
-        public DeviceConnectionService(string portName, int baudRate = 115200)
+        public DeviceConnectionService(string portName, int baudRate)
         {
             _client = new SafeDocClient(portName, baudRate);
             _client.RawDataReceived += OnDataReceived;
@@ -41,7 +41,7 @@ namespace SafeDoc.Business
             _client.Connect();
         }
 
-        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 2000)
+        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds)
         {
             return _client.SendCommand(command, timeoutMilliseconds);
         }

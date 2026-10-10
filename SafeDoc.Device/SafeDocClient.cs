@@ -19,7 +19,7 @@ namespace SafeDoc.Device
         private string _completeResponseJson;
         private Exception _communicationError;
 
-        public SafeDocClient(string portName, int baudRate = 115200)
+        public SafeDocClient(string portName, int baudRate)
         {
             _serialPort = new SerialPortManager(portName, baudRate);
             _serialPort.DataReceived += OnSerialDataReceived;
@@ -56,7 +56,7 @@ namespace SafeDoc.Device
             _serialPort.Disconnect();
         }
 
-        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 2000)
+        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds)
         {
             if (command == null)
             {

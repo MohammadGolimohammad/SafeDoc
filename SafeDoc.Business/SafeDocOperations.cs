@@ -7,9 +7,16 @@ namespace SafeDoc.Business
     public sealed class SafeDocOperations
     {
         private readonly DeviceConnectionService _connection;
-        private const int GetAllSettingsTimeoutMilliseconds = 10000;
+        private readonly int _commandTimeoutMilliseconds;
+        private readonly int _settingsTimeoutMilliseconds;
+        private readonly int _fingerprintEnrollTimeoutMilliseconds;
 
-        public SafeDocOperations(DeviceConnectionService connection)
+        public SafeDocOperations(
+            DeviceConnectionService connection,
+            int commandTimeoutMilliseconds,
+            int settingsTimeoutMilliseconds,
+            int fingerprintEnrollTimeoutMilliseconds
+        )
         {
             if (connection == null)
             {
@@ -17,6 +24,9 @@ namespace SafeDoc.Business
             }
 
             _connection = connection;
+            _commandTimeoutMilliseconds = commandTimeoutMilliseconds;
+            _settingsTimeoutMilliseconds = settingsTimeoutMilliseconds;
+            _fingerprintEnrollTimeoutMilliseconds = fingerprintEnrollTimeoutMilliseconds;
         }
 
         public SafeDocResponse EnrollFingerprint(string userId)
@@ -178,7 +188,7 @@ namespace SafeDoc.Business
         {
             return Send(
                 SafeDocCommandType.GetAllSettings,
-                GetAllSettingsTimeoutMilliseconds
+                _settingsTimeoutMilliseconds
             );
         }
 
@@ -237,7 +247,7 @@ namespace SafeDoc.Business
 
         private SafeDocResponse Send(SafeDocCommandType type, params object[] data)
         {
-            return Send(type, 2000, data);
+            return Send(type, _commandTimeoutMilliseconds, data);
         }
 
         private SafeDocResponse Send(SafeDocCommandType type, int timeoutMilliseconds, params object[] data)
@@ -253,7 +263,7 @@ namespace SafeDoc.Business
 
             if (type == SafeDocCommandType.FingerEnroll)
             {
-                timeoutMilliseconds = 60000;
+                timeoutMilliseconds = _fingerprintEnrollTimeoutMilliseconds;
             }
 
             return _connection.SendCommand(command, timeoutMilliseconds);

@@ -6,9 +6,6 @@ namespace SafeDoc.UI
 {
     internal static class DevicePortFinder
     {
-        private const string ApprovedVendorId = "VID_CAFE";
-        private const string ApprovedProductId = "PID_4014";
-
         internal static string FindApprovedDevicePort()
         {
             try
@@ -70,8 +67,8 @@ namespace SafeDoc.UI
                 return false;
             }
 
-            return pnpDeviceId.IndexOf(ApprovedVendorId, StringComparison.OrdinalIgnoreCase) >= 0
-                && pnpDeviceId.IndexOf(ApprovedProductId, StringComparison.OrdinalIgnoreCase) >= 0;
+            return pnpDeviceId.IndexOf(DeviceConfiguration.ApprovedVendorId, StringComparison.OrdinalIgnoreCase) >= 0
+                && pnpDeviceId.IndexOf(DeviceConfiguration.ApprovedProductId, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private static bool IsAvailableSerialPort(string portName)
