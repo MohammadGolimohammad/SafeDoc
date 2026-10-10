@@ -183,21 +183,21 @@ namespace SafeDoc.UI
             }
 
             StartLoginLoading();
-            //string tokenError = CheckDeviceToken();
-            //if (string.IsNullOrWhiteSpace(tokenError) == false)
-            //{
-            //    StopLoginLoading(tokenError);
-            //    return;
-            //}
+            string tokenError = CheckDeviceToken();
+            if (string.IsNullOrWhiteSpace(tokenError) == false)
+            {
+                StopLoginLoading(tokenError);
+                return;
+            }
 
-            //if (chkRememberAccessKey.Checked)
-            //{
-            //    AccessKeyStorage.Save(_accessToken);
-            //}
-            //else
-            //{
-            //    AccessKeyStorage.Clear();
-            //}
+            if (chkRememberAccessKey.Checked)
+            {
+                AccessKeyStorage.Save(_accessToken);
+            }
+            else
+            {
+                AccessKeyStorage.Clear();
+            }
 
             OpenMainForm();
         }
