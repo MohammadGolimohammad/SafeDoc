@@ -62,6 +62,18 @@ namespace SafeDoc.UI
             txtDeviceTime.Validating += OnTimeControlValidating;
         }
 
+        private void chkClearSavedAccessKey_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkClearSavedAccessKey.Checked == false)
+            {
+                return;
+            }
+
+            AccessKeyStorage.Clear();
+            chkClearSavedAccessKey.Enabled = false;
+            Status("کلید ورود ذخیره‌شده حذف شد.", true);
+        }
+
         private void UpdateToggleButtons()
         {
             UpdateToggleButton(

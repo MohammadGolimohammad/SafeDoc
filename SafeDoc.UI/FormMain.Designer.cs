@@ -82,6 +82,7 @@ namespace SafeDoc.UI
             this.dgvUsers = new System.Windows.Forms.DataGridView();
             this.btnSaveSelectedUserPassword = new System.Windows.Forms.Button();
             this.btnGetSelectedUserPasswords = new System.Windows.Forms.Button();
+            this.chkClearSavedAccessKey = new System.Windows.Forms.CheckBox();
             this.fpId = new System.Windows.Forms.Label();
             this.passId = new System.Windows.Forms.Label();
             this.passName = new System.Windows.Forms.Label();
@@ -140,6 +141,7 @@ namespace SafeDoc.UI
             this.pnlMain.AutoScroll = true;
             this.pnlMain.Controls.Add(this.connection);
             this.pnlMain.Controls.Add(this.lblConnection);
+            this.pnlMain.Controls.Add(this.chkClearSavedAccessKey);
             this.pnlMain.Controls.Add(this.groupFingerprint);
             this.pnlMain.Controls.Add(this.groupSettings);
             this.pnlMain.Controls.Add(this.groupUsers);
@@ -201,6 +203,17 @@ namespace SafeDoc.UI
             this.lblConnection.TabIndex = 7;
             this.lblConnection.Text = "وضعیت دستگاه تأییدشده: ● پیدا نشد";
             this.lblConnection.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
+            // chkClearSavedAccessKey
+            //
+            this.chkClearSavedAccessKey.AutoSize = true;
+            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(12, 542);
+            this.chkClearSavedAccessKey.Name = "chkClearSavedAccessKey";
+            this.chkClearSavedAccessKey.Size = new System.Drawing.Size(160, 20);
+            this.chkClearSavedAccessKey.TabIndex = 8;
+            this.chkClearSavedAccessKey.Text = "حذف کلید ورود ذخیره‌شده";
+            this.chkClearSavedAccessKey.UseVisualStyleBackColor = true;
+            this.chkClearSavedAccessKey.CheckedChanged += new System.EventHandler(this.chkClearSavedAccessKey_CheckedChanged);
             // 
             // groupFingerprint
             // 
@@ -1056,5 +1069,6 @@ namespace SafeDoc.UI
         private System.Windows.Forms.DataGridViewButtonColumn ColumnDelete;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnFingerprint;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnFingerprintStatus;
+        private System.Windows.Forms.CheckBox chkClearSavedAccessKey;
     }
 }

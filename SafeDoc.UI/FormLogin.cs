@@ -20,6 +20,8 @@ namespace SafeDoc.UI
         private void FormLogin_Load(object sender, EventArgs e)
         {
             AppSettings.CurrentLanguage = AppLanguage.Persian;
+            txtAccessKey.Text = AccessKeyStorage.Load();
+            chkRememberAccessKey.Checked = string.IsNullOrWhiteSpace(txtAccessKey.Text) == false;
         }
 
         private void ToggleLanguage()
@@ -181,6 +183,15 @@ namespace SafeDoc.UI
             {
                 StopLoginLoading(tokenError);
                 return;
+            }
+
+            if (chkRememberAccessKey.Checked)
+            {
+                AccessKeyStorage.Save(_accessToken);
+            }
+            else
+            {
+                AccessKeyStorage.Clear();
             }
 
             OpenMainForm();
