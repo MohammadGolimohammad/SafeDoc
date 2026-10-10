@@ -682,6 +682,7 @@ namespace SafeDoc.UI
             expirationDateSelector.Value = defaultExpiration;
             txtExpirationTime.Text = defaultExpiration.ToString("HH:mm");
             chkFlashPermission.Checked = false;
+            nudUsbUseCount.Value = GetDefaultUsbUseCount();
             Status("عملیات لغو شد", true);
         }
 
@@ -696,6 +697,7 @@ namespace SafeDoc.UI
             expirationDateSelector.Enabled = canEditInputs;
             txtExpirationTime.Enabled = canEditInputs;
             chkFlashPermission.Enabled = canEditInputs;
+            nudUsbUseCount.Enabled = canEditInputs && chkFlashPermission.Checked;
             btnEnrollFingerprint.Enabled = canUseEditor;
             btnCancelUser.Enabled = canEditInputs;
             btnIdentifyFingerprint.Enabled = canUseEditor;
@@ -722,6 +724,7 @@ namespace SafeDoc.UI
                 ? string.Empty
                 : _selectedUser.ExpireTime;
             chkFlashPermission.Checked = _selectedUser.FlashPermission;
+            nudUsbUseCount.Value = GetValidUsbUseCount(_selectedUser.UsbUseCount);
             SetExpirationDateInput(_selectedUser.ExpireDate);
         }
 
@@ -973,7 +976,7 @@ namespace SafeDoc.UI
             user.ExpireTime = NormalizeDigits(txtExpirationTime.Text);
             user.FlashPermission = chkFlashPermission.Checked;
             user.UsbUseCount = chkFlashPermission.Checked
-                ? GetUsbUseCountForSave(user)
+                ? (int)nudUsbUseCount.Value
                 : 0;
 
             RegisterFingerprint(user);
@@ -992,6 +995,31 @@ namespace SafeDoc.UI
             }
 
             return DeviceConfiguration.DefaultUsbUseCount;
+        }
+
+        private decimal GetDefaultUsbUseCount()
+        {
+            return GetValidUsbUseCount(DeviceConfiguration.DefaultUsbUseCount);
+        }
+
+        private decimal GetValidUsbUseCount(int count)
+        {
+            if (count < 1)
+            {
+                return 1;
+            }
+
+            if (count > 99)
+            {
+                return 99;
+            }
+
+            return count;
+        }
+
+        private void chkFlashPermission_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUserEditorState();
         }
 
         private string GetSelectedExpirationDate()

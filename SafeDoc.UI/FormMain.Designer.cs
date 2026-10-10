@@ -24,6 +24,8 @@ namespace SafeDoc.UI
         private System.Windows.Forms.Button btnEnterStatusToggle, btnHidAfterExpirationToggle, btnBuzzerStatusToggle;
         private System.Windows.Forms.Button btnToggleFingerprintPassword;
         private System.Windows.Forms.Panel pnlPasswordStrengthWeak, pnlPasswordStrengthMedium, pnlPasswordStrengthStrong;
+        private System.Windows.Forms.Label lblUsbUseCount;
+        private System.Windows.Forms.NumericUpDown nudUsbUseCount;
         private System.Windows.Forms.DataGridView dgvUsers;
         private System.Windows.Forms.Button btnSaveSelectedUserPassword;
         private System.Windows.Forms.Button btnGetSelectedUserPasswords;
@@ -57,6 +59,8 @@ namespace SafeDoc.UI
             this.pnlPasswordStrengthStrong = new System.Windows.Forms.Panel();
             this.btnToggleFingerprintPassword = new System.Windows.Forms.Button();
             this.chkFlashPermission = new System.Windows.Forms.CheckBox();
+            this.lblUsbUseCount = new System.Windows.Forms.Label();
+            this.nudUsbUseCount = new System.Windows.Forms.NumericUpDown();
             this.fpPasswordName = new System.Windows.Forms.Label();
             this.fpPassword = new System.Windows.Forms.Label();
             this.txtFingerprintPasswordName = new System.Windows.Forms.TextBox();
@@ -122,6 +126,7 @@ namespace SafeDoc.UI
             this.connection.SuspendLayout();
             this.operationStatusStrip.SuspendLayout();
             this.groupFingerprint.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudUsbUseCount)).BeginInit();
             this.groupSettings.SuspendLayout();
             this.groupUsers.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvUsers)).BeginInit();
@@ -228,6 +233,8 @@ namespace SafeDoc.UI
             this.groupFingerprint.Controls.Add(this.pnlPasswordStrengthStrong);
             this.groupFingerprint.Controls.Add(this.btnToggleFingerprintPassword);
             this.groupFingerprint.Controls.Add(this.chkFlashPermission);
+            this.groupFingerprint.Controls.Add(this.lblUsbUseCount);
+            this.groupFingerprint.Controls.Add(this.nudUsbUseCount);
             this.groupFingerprint.Controls.Add(this.fpPasswordName);
             this.groupFingerprint.Controls.Add(this.fpPassword);
             this.groupFingerprint.Controls.Add(this.txtFingerprintPasswordName);
@@ -305,6 +312,42 @@ namespace SafeDoc.UI
             this.chkFlashPermission.TabIndex = 8;
             this.chkFlashPermission.Text = "مجوز فلش";
             this.chkFlashPermission.UseVisualStyleBackColor = true;
+            this.chkFlashPermission.CheckedChanged += new System.EventHandler(this.chkFlashPermission_CheckedChanged);
+            //
+            // lblUsbUseCount
+            //
+            this.lblUsbUseCount.AutoSize = true;
+            this.lblUsbUseCount.Location = new System.Drawing.Point(477, 83);
+            this.lblUsbUseCount.Name = "lblUsbUseCount";
+            this.lblUsbUseCount.Size = new System.Drawing.Size(109, 16);
+            this.lblUsbUseCount.TabIndex = 15;
+            this.lblUsbUseCount.Text = "دفعات مجاز روزانه:";
+            //
+            // nudUsbUseCount
+            //
+            this.nudUsbUseCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.nudUsbUseCount.ForeColor = System.Drawing.Color.White;
+            this.nudUsbUseCount.Location = new System.Drawing.Point(593, 80);
+            this.nudUsbUseCount.Maximum = new decimal(new int[] {
+            99,
+            0,
+            0,
+            0});
+            this.nudUsbUseCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudUsbUseCount.Name = "nudUsbUseCount";
+            this.nudUsbUseCount.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.nudUsbUseCount.Size = new System.Drawing.Size(51, 24);
+            this.nudUsbUseCount.TabIndex = 16;
+            this.nudUsbUseCount.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.nudUsbUseCount.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // fpPasswordName
             // 
@@ -1085,6 +1128,7 @@ namespace SafeDoc.UI
             this.operationStatusStrip.PerformLayout();
             this.groupFingerprint.ResumeLayout(false);
             this.groupFingerprint.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudUsbUseCount)).EndInit();
             this.groupSettings.ResumeLayout(false);
             this.groupSettings.PerformLayout();
             this.groupUsers.ResumeLayout(false);
