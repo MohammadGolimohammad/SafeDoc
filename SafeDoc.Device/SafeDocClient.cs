@@ -47,7 +47,7 @@ namespace SafeDoc.Device
             _serialPort.Disconnect();
         }
 
-        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 10000)
+        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 2000)
         {
             if (command == null)
             {

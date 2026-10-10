@@ -33,6 +33,7 @@ namespace SafeDoc.UI
         private BindingList<SafeDocUserRow> _deviceUsers;
         private SafeDocUserRow _selectedUser;
         private SafeDocUserRow _visiblePasswordUser;
+        private SafeDocDeviceSettings _lastDeviceSettings;
         private DateTime? _deviceClockAtRead;
         private DateTime _deviceClockLocalReadAt;
         private bool _isFilteringFingerprintPassword;
@@ -186,7 +187,7 @@ namespace SafeDoc.UI
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
                 await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadDeviceSettings();
+                await ReadDeviceSettingsAsync();
                 await Task.Delay(DeviceReadyDelayMilliseconds);
                 ReadUsersFromDevice();
                 SetConnected(true);
@@ -1717,12 +1718,12 @@ namespace SafeDoc.UI
             SaveHidStatus();
         }
 
-        private void ReadDeviceSettings()
+        private async Task ReadDeviceSettingsAsync()
         {
             try
             {
-                SafeDocDeviceSettings settings;
-                SafeDocResponse response = _operations.GetAllSettings(out settings);
+                SafeDocResponse response = await Task.Run(ReadSettingsFromDevice);
+                SafeDocDeviceSettings settings = _lastDeviceSettings;
                 ShowDeviceResponse(response, false, false);
                 if (response == null || response.isSuccess == false)
                 {
@@ -1742,6 +1743,11 @@ namespace SafeDoc.UI
             {
                 Status("خواندن تنظیمات کامل دستگاه انجام نشد: " + exception.Message, false);
             }
+        }
+
+        private SafeDocResponse ReadSettingsFromDevice()
+        {
+            return _operations.GetAllSettings(out _lastDeviceSettings);
         }
 
         private void CloseConnection()

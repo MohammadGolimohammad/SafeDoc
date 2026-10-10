@@ -223,7 +223,7 @@ namespace SafeDoc.Business
 
         private SafeDocResponse Send(SafeDocCommandType type, params object[] data)
         {
-            return Send(type, 10000, data);
+            return Send(type, 2000, data);
         }
 
         private SafeDocResponse Send(SafeDocCommandType type, int timeoutMilliseconds, params object[] data)

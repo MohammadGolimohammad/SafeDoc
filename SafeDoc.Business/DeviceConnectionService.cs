@@ -33,7 +33,7 @@ namespace SafeDoc.Business
             _client.Connect();
         }
 
-        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 10000)
+        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 2000)
         {
             return _client.SendCommand(command, timeoutMilliseconds);
         }
