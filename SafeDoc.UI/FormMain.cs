@@ -303,6 +303,11 @@ namespace SafeDoc.UI
 
         private void DeviceCommandSent(object sender, string command)
         {
+            UpdateDeviceOperationStage(
+                35,
+                "مرحله ۱ از ۳ | فرمان برای دستگاه ارسال شد؛ منتظر پاسخ هستیم.",
+                true
+            );
             WriteOperationLog("درخواست ارسال‌شده به دستگاه", command, true);
         }
 
@@ -313,7 +318,37 @@ namespace SafeDoc.UI
 
         private void DeviceCommunicationError(object sender, string message)
         {
+            UpdateDeviceOperationStage(
+                100,
+                "مرحله ۳ از ۳ | ارتباط با دستگاه با خطا روبه‌رو شد.",
+                false
+            );
             WriteOperationLog("خطای ارتباط با دستگاه", message, false);
+        }
+
+        private void UpdateDeviceOperationStage(int value, string message, bool ok)
+        {
+            if (IsDisposed || IsHandleCreated == false)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(
+                    new Action<int, string, bool>(UpdateDeviceOperationStage),
+                    value,
+                    message,
+                    ok
+                );
+                return;
+            }
+
+            SetOperationProgress(value, message);
+            lblOperationProgress.ForeColor = ok
+                ? Color.FromArgb(96, 165, 250)
+                : Color.FromArgb(251, 113, 133);
+            lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
         }
 
         private void WriteOperationLog(string title, string message, bool ok)
@@ -377,7 +412,7 @@ namespace SafeDoc.UI
 
             if (ok == false)
             {
-                SetOperationProgress(100, text);
+                SetOperationProgress(100, "مرحله ۳ از ۳ | " + text);
                 EndOperationLoading();
             }
             operationStatusStrip.Refresh();
@@ -389,12 +424,15 @@ namespace SafeDoc.UI
             groupSettings.Enabled = false;
             groupUsers.Enabled = false;
             UseWaitCursor = true;
-            operationProgressBar.Style = ProgressBarStyle.Marquee;
-            operationProgressBarLarge.Style = ProgressBarStyle.Marquee;
-            lblOperationProgress.Text = message;
-            lblOperationProgress.ToolTipText = message;
+            operationProgressBar.Style = ProgressBarStyle.Continuous;
+            operationProgressBar.Value = 10;
+            operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
+            operationProgressBarLarge.Value = 10;
+            string stageMessage = "مرحله ۱ از ۳ | " + message;
+            lblOperationProgress.Text = stageMessage;
+            lblOperationProgress.ToolTipText = stageMessage;
             lblOperationProgress.ForeColor = System.Drawing.Color.FromArgb(226, 232, 240);
-            lblOperationProgressText.Text = message;
+            lblOperationProgressText.Text = stageMessage;
             lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
             WriteOperationLog("شروع عملیات", message, true);
             operationStatusStrip.Refresh();
@@ -506,9 +544,13 @@ namespace SafeDoc.UI
             try
             {
                 string deviceResult = response.isSuccess ? "پاسخ دستگاه: عملیات موفق بود." : "پاسخ دستگاه: " + DescribeStatusCode(response.responseStatusCode);
+                SetOperationProgress(
+                    75,
+                    "مرحله ۲ از ۳ | پاسخ دستگاه دریافت شد؛ نتیجه در حال بررسی است."
+                );
                 WriteOperationLog("پاسخ نهایی دستگاه", deviceResult + " کد پاسخ: " + response.responseStatusCode, response.isSuccess);
-                SetOperationProgress(100,deviceResult);
-                Status(deviceResult,response.isSuccess);
+                SetOperationProgress(100, "مرحله ۳ از ۳ | " + deviceResult);
+                Status("مرحله ۳ از ۳ | " + deviceResult, response.isSuccess);
                 if (completeOperation)
                 {
                     EndOperationLoading();
