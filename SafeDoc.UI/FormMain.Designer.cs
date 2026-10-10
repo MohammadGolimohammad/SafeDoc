@@ -12,6 +12,9 @@ namespace SafeDoc.UI
         private System.Windows.Forms.StatusStrip operationStatusStrip;
         private System.Windows.Forms.ToolStripStatusLabel lblOperationProgress;
         private System.Windows.Forms.ToolStripProgressBar operationProgressBar;
+        private System.Windows.Forms.Label lblOperationProgressText;
+        private System.Windows.Forms.ProgressBar operationProgressBarLarge;
+        private System.Windows.Forms.RichTextBox txtOperationLog;
         private System.Windows.Forms.Label lblConnection;
         private System.Windows.Forms.Label lblCurrentDeviceTime;
         private System.Windows.Forms.Label lblPasswordStrength;
@@ -50,6 +53,9 @@ namespace SafeDoc.UI
             this.operationStatusStrip = new System.Windows.Forms.StatusStrip();
             this.lblOperationProgress = new System.Windows.Forms.ToolStripStatusLabel();
             this.operationProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.lblOperationProgressText = new System.Windows.Forms.Label();
+            this.operationProgressBarLarge = new System.Windows.Forms.ProgressBar();
+            this.txtOperationLog = new System.Windows.Forms.RichTextBox();
             this.lblConnection = new System.Windows.Forms.Label();
             this.chkClearSavedAccessKey = new System.Windows.Forms.CheckBox();
             this.groupFingerprint = new System.Windows.Forms.GroupBox();
@@ -164,10 +170,13 @@ namespace SafeDoc.UI
             // 
             this.connection.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
             this.connection.Controls.Add(this.operationStatusStrip);
+            this.connection.Controls.Add(this.txtOperationLog);
+            this.connection.Controls.Add(this.lblOperationProgressText);
+            this.connection.Controls.Add(this.operationProgressBarLarge);
             this.connection.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
             this.connection.Location = new System.Drawing.Point(12, 12);
             this.connection.Name = "connection";
-            this.connection.Size = new System.Drawing.Size(922, 51);
+            this.connection.Size = new System.Drawing.Size(922, 176);
             this.connection.TabIndex = 1;
             this.connection.TabStop = false;
             this.connection.Text = "اتصال به دستگاه";
@@ -175,7 +184,7 @@ namespace SafeDoc.UI
             // operationStatusStrip
             // 
             this.operationStatusStrip.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
-            this.operationStatusStrip.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.operationStatusStrip.Dock = System.Windows.Forms.DockStyle.None;
             this.operationStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblOperationProgress,
             this.operationProgressBar});
@@ -186,6 +195,7 @@ namespace SafeDoc.UI
             this.operationStatusStrip.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.operationStatusStrip.Size = new System.Drawing.Size(916, 28);
             this.operationStatusStrip.TabIndex = 1;
+            this.operationStatusStrip.Visible = false;
             // 
             // lblOperationProgress
             // 
@@ -202,11 +212,52 @@ namespace SafeDoc.UI
             this.operationProgressBar.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.operationProgressBar.Size = new System.Drawing.Size(200, 22);
             this.operationProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            //
+            // operationProgressBarLarge
+            //
+            this.operationProgressBarLarge.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.operationProgressBarLarge.Location = new System.Drawing.Point(14, 24);
+            this.operationProgressBarLarge.MarqueeAnimationSpeed = 30;
+            this.operationProgressBarLarge.Name = "operationProgressBarLarge";
+            this.operationProgressBarLarge.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.operationProgressBarLarge.RightToLeftLayout = true;
+            this.operationProgressBarLarge.Size = new System.Drawing.Size(894, 22);
+            this.operationProgressBarLarge.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.operationProgressBarLarge.TabIndex = 2;
+            this.operationProgressBarLarge.Value = 100;
+            //
+            // lblOperationProgressText
+            //
+            this.lblOperationProgressText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblOperationProgressText.AutoEllipsis = true;
+            this.lblOperationProgressText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.lblOperationProgressText.Location = new System.Drawing.Point(14, 51);
+            this.lblOperationProgressText.Name = "lblOperationProgressText";
+            this.lblOperationProgressText.Size = new System.Drawing.Size(894, 20);
+            this.lblOperationProgressText.TabIndex = 3;
+            this.lblOperationProgressText.Text = "آماده انجام عملیات";
+            this.lblOperationProgressText.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // txtOperationLog
+            //
+            this.txtOperationLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOperationLog.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.txtOperationLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtOperationLog.Font = new System.Drawing.Font("Shabnam FD", 8.25F);
+            this.txtOperationLog.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.txtOperationLog.Location = new System.Drawing.Point(14, 74);
+            this.txtOperationLog.Name = "txtOperationLog";
+            this.txtOperationLog.ReadOnly = true;
+            this.txtOperationLog.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.txtOperationLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            this.txtOperationLog.Size = new System.Drawing.Size(894, 82);
+            this.txtOperationLog.TabIndex = 4;
+            this.txtOperationLog.Text = "";
             // 
             // lblConnection
             // 
             this.lblConnection.AutoSize = true;
-            this.lblConnection.Location = new System.Drawing.Point(737, 577);
+            this.lblConnection.Location = new System.Drawing.Point(737, 702);
             this.lblConnection.Name = "lblConnection";
             this.lblConnection.Size = new System.Drawing.Size(194, 16);
             this.lblConnection.TabIndex = 7;
@@ -216,7 +267,7 @@ namespace SafeDoc.UI
             // chkClearSavedAccessKey
             // 
             this.chkClearSavedAccessKey.AutoSize = true;
-            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(12, 580);
+            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(12, 705);
             this.chkClearSavedAccessKey.Name = "chkClearSavedAccessKey";
             this.chkClearSavedAccessKey.Size = new System.Drawing.Size(152, 20);
             this.chkClearSavedAccessKey.TabIndex = 8;
@@ -246,7 +297,7 @@ namespace SafeDoc.UI
             this.groupFingerprint.Controls.Add(this.btnEnrollFingerprint);
             this.groupFingerprint.Controls.Add(this.btnIdentifyFingerprint);
             this.groupFingerprint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.groupFingerprint.Location = new System.Drawing.Point(12, 69);
+            this.groupFingerprint.Location = new System.Drawing.Point(12, 194);
             this.groupFingerprint.Name = "groupFingerprint";
             this.groupFingerprint.Size = new System.Drawing.Size(922, 100);
             this.groupFingerprint.TabIndex = 1;
@@ -486,7 +537,7 @@ namespace SafeDoc.UI
             this.groupSettings.Controls.Add(this.btnBuzzerStatusToggle);
             this.groupSettings.Controls.Add(this.currentTimeTitle);
             this.groupSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.groupSettings.Location = new System.Drawing.Point(12, 414);
+            this.groupSettings.Location = new System.Drawing.Point(12, 539);
             this.groupSettings.Name = "groupSettings";
             this.groupSettings.Size = new System.Drawing.Size(922, 160);
             this.groupSettings.TabIndex = 3;
@@ -656,7 +707,7 @@ namespace SafeDoc.UI
             this.groupUsers.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
             this.groupUsers.Controls.Add(this.dgvUsers);
             this.groupUsers.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.groupUsers.Location = new System.Drawing.Point(12, 175);
+            this.groupUsers.Location = new System.Drawing.Point(12, 300);
             this.groupUsers.Name = "groupUsers";
             this.groupUsers.Size = new System.Drawing.Size(922, 233);
             this.groupUsers.TabIndex = 4;

@@ -186,6 +186,9 @@ namespace SafeDoc.UI
                     DeviceConfiguration.BaudRate
                 );
                 _connection = newConnection;
+                newConnection.CommandSent += DeviceCommandSent;
+                newConnection.RawDataReceived += DeviceResponseReceived;
+                newConnection.ErrorOccurred += DeviceCommunicationError;
                 newConnection.Connect();
 
                 Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
@@ -240,6 +243,9 @@ namespace SafeDoc.UI
             try
             {
                 BeginOperationLoading("در حال آماده‌سازی دستگاه...");
+                _connection.CommandSent += DeviceCommandSent;
+                _connection.RawDataReceived += DeviceResponseReceived;
+                _connection.ErrorOccurred += DeviceCommunicationError;
                 _operations = CreateOperations(_connection);
                 _connectedApprovedPort = _connection.PortName;
                 _approvedDeviceWasPresent = true;
@@ -295,16 +301,79 @@ namespace SafeDoc.UI
             lblConnection.Text = ok ? "وضعیت دستگاه تأییدشده: ● متصل" : "وضعیت دستگاه تأییدشده: ● پیدا نشد";
             lblConnection.ForeColor = ok ? System.Drawing.Color.ForestGreen : System.Drawing.Color.Firebrick;
         }
+
+        private void DeviceCommandSent(object sender, string command)
+        {
+            WriteOperationLog("درخواست ارسال‌شده به دستگاه", command, true);
+        }
+
+        private void DeviceResponseReceived(object sender, string response)
+        {
+            WriteOperationLog("داده دریافتی از دستگاه", response, true);
+        }
+
+        private void DeviceCommunicationError(object sender, string message)
+        {
+            WriteOperationLog("خطای ارتباط با دستگاه", message, false);
+        }
+
+        private void WriteOperationLog(string title, string message, bool ok)
+        {
+            if (IsDisposed || IsHandleCreated == false)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(
+                    new Action<string, string, bool>(WriteOperationLog),
+                    title,
+                    message,
+                    ok
+                );
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            string line = DateTime.Now.ToString("HH:mm:ss")
+                + " | "
+                + title
+                + Environment.NewLine
+                + message.Trim()
+                + Environment.NewLine
+                + "────────────────────────"
+                + Environment.NewLine;
+
+            txtOperationLog.SelectionStart = txtOperationLog.TextLength;
+            txtOperationLog.SelectionColor = ok
+                ? Color.FromArgb(191, 219, 254)
+                : Color.FromArgb(253, 164, 175);
+            txtOperationLog.AppendText(line);
+            txtOperationLog.SelectionColor = txtOperationLog.ForeColor;
+            txtOperationLog.SelectionStart = txtOperationLog.TextLength;
+            txtOperationLog.ScrollToCaret();
+        }
+
         private void Status(string text, bool ok)
         {
             lblOperationProgress.Text = text;
             lblOperationProgress.ToolTipText = text;
             lblOperationProgress.ForeColor = ok ? System.Drawing.Color.FromArgb(74, 222, 128) : System.Drawing.Color.FromArgb(251, 113, 133);
+            lblOperationProgressText.Text = text;
+            lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
+            WriteOperationLog("وضعیت برنامه", text, ok);
 
             if (_operationInProgress == false)
             {
                 operationProgressBar.Style = ProgressBarStyle.Continuous;
                 operationProgressBar.Value = 100;
+                operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
+                operationProgressBarLarge.Value = 100;
             }
 
             if (ok == false)
@@ -318,13 +387,17 @@ namespace SafeDoc.UI
         {
             _operationInProgress = true;
             groupFingerprint.Enabled = false;
-            groupSettings.Enabled = _deviceIsConnected;
+            groupSettings.Enabled = false;
             groupUsers.Enabled = false;
             UseWaitCursor = true;
             operationProgressBar.Style = ProgressBarStyle.Marquee;
+            operationProgressBarLarge.Style = ProgressBarStyle.Marquee;
             lblOperationProgress.Text = message;
             lblOperationProgress.ToolTipText = message;
             lblOperationProgress.ForeColor = System.Drawing.Color.FromArgb(226, 232, 240);
+            lblOperationProgressText.Text = message;
+            lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
+            WriteOperationLog("شروع عملیات", message, true);
             operationStatusStrip.Refresh();
         }
 
@@ -333,6 +406,7 @@ namespace SafeDoc.UI
             _operationInProgress = false;
             UseWaitCursor = false;
             operationProgressBar.Style = ProgressBarStyle.Continuous;
+            operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
             groupFingerprint.Enabled = _deviceIsConnected;
             groupSettings.Enabled = _deviceIsConnected;
             groupUsers.Enabled = _deviceIsConnected;
@@ -352,8 +426,11 @@ namespace SafeDoc.UI
             }
 
             operationProgressBar.Value = value;
+            operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
+            operationProgressBarLarge.Value = value;
             lblOperationProgress.Text = message;
             lblOperationProgress.ToolTipText = message;
+            lblOperationProgressText.Text = message;
             operationStatusStrip.Refresh();
         }
 
@@ -430,6 +507,7 @@ namespace SafeDoc.UI
             try
             {
                 string deviceResult = response.isSuccess ? "پاسخ دستگاه: عملیات موفق بود." : "پاسخ دستگاه: " + DescribeStatusCode(response.responseStatusCode);
+                WriteOperationLog("پاسخ نهایی دستگاه", deviceResult + " کد پاسخ: " + response.responseStatusCode, response.isSuccess);
                 SetOperationProgress(100,deviceResult);
                 Status(deviceResult,response.isSuccess);
                 if (completeOperation)
