@@ -121,108 +121,27 @@ namespace SafeDoc.Device
             lock (_responseLock)
             {
                 _receivedText.Append(receivedPart);
-
-                string json = FindCompleteResponseJson(_receivedText.ToString());
-                if (json == null)
+                string receivedJson = _receivedText.ToString().Trim('\0', ' ', '\r', '\n', '\t');
+                JObject responseObject;
+                try
+                {
+                    responseObject = JObject.Parse(receivedJson);
+                }
+                catch (JsonReaderException)
                 {
                     return;
                 }
 
-                _completeResponseJson = json;
+                if (
+                    responseObject.GetValue("isSuccess", StringComparison.OrdinalIgnoreCase) == null
+                    || responseObject.GetValue("responseStatusCode", StringComparison.OrdinalIgnoreCase) == null
+                )
+                {
+                    return;
+                }
+
+                _completeResponseJson = responseObject.ToString(Formatting.None);
                 _responseReady.Set();
-            }
-        }
-
-        private static string FindCompleteResponseJson(string text)
-        {
-            int startIndex = 0;
-            while (startIndex < text.Length)
-            {
-                int firstBrace = text.IndexOf('{', startIndex);
-                if (firstBrace < 0)
-                {
-                    return null;
-                }
-
-                int endIndex = FindJsonObjectEnd(text, firstBrace);
-                if (endIndex < 0)
-                {
-                    return null;
-                }
-
-                string json = text.Substring(firstBrace, endIndex - firstBrace + 1);
-                if (IsDeviceResponseJson(json))
-                {
-                    return json;
-                }
-
-                startIndex = endIndex + 1;
-            }
-
-            return null;
-        }
-
-        private static int FindJsonObjectEnd(string text, int firstBrace)
-        {
-            int openBraces = 0;
-            bool isInsideString = false;
-            bool isEscaped = false;
-
-            for (int index = firstBrace; index < text.Length; index++)
-            {
-                char currentCharacter = text[index];
-
-                if (isInsideString)
-                {
-                    if (isEscaped)
-                    {
-                        isEscaped = false;
-                    }
-                    else if (currentCharacter == '\\')
-                    {
-                        isEscaped = true;
-                    }
-                    else if (currentCharacter == '"')
-                    {
-                        isInsideString = false;
-                    }
-
-                    continue;
-                }
-
-                if (currentCharacter == '"')
-                {
-                    isInsideString = true;
-                }
-                else if (currentCharacter == '{')
-                {
-                    openBraces++;
-                }
-                else if (currentCharacter == '}')
-                {
-                    openBraces--;
-
-                    if (openBraces == 0)
-                    {
-                        return index;
-                    }
-                }
-            }
-
-            return -1;
-        }
-
-        private static bool IsDeviceResponseJson(string json)
-        {
-            try
-            {
-                JObject responseObject = JObject.Parse(json);
-                return responseObject["isSuccess"] != null
-                    && responseObject["responseStatusCode"] != null;
-            }
-            catch (JsonReaderException)
-            {
-                return false;
             }
         }
 
