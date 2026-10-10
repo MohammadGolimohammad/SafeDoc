@@ -3,8 +3,6 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.IO.Ports;
-using System.Management;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -38,8 +36,6 @@ namespace SafeDoc.UI
         private DateTime _deviceClockLocalReadAt;
         private bool _isFilteringFingerprintPassword;
 
-        private const string ApprovedVendorId = "VID_CAFE";
-        private const string ApprovedProductId = "PID_4014";
         private const int ApprovedDeviceBaudRate = 115200;
         private const int DeviceReadyDelayMilliseconds = 1000;
         private const int DefaultUsbUseCount = 1;
@@ -101,7 +97,7 @@ namespace SafeDoc.UI
                 return;
             }
 
-            string approvedPort = FindApprovedDevicePort();
+            string approvedPort = DevicePortFinder.FindApprovedDevicePort();
             if (string.IsNullOrEmpty(approvedPort))
             {
                 if (_connection != null || _approvedDeviceWasPresent)
@@ -134,7 +130,7 @@ namespace SafeDoc.UI
 
         private async Task ConnectApprovedDeviceAsync()
         {
-            string approvedPort = FindApprovedDevicePort();
+            string approvedPort = DevicePortFinder.FindApprovedDevicePort();
             if (string.IsNullOrEmpty(approvedPort))
             {
                 CloseConnection();
@@ -202,83 +198,6 @@ namespace SafeDoc.UI
             {
                 _isConnecting = false;
             }
-        }
-
-        internal static string FindApprovedDevicePort()
-        { // chat gpt 
-            try
-            {
-                using (
-                    ManagementObjectSearcher serialPortSearcher = new ManagementObjectSearcher(
-                        "SELECT DeviceID, PNPDeviceID FROM Win32_SerialPort"
-                    )
-                )
-                {
-                    foreach (ManagementObject serialPort in serialPortSearcher.Get())
-                    {
-                        string deviceId = Convert.ToString(serialPort["DeviceID"]);
-                        string pnpDeviceId = Convert.ToString(serialPort["PNPDeviceID"]);
-                        if (IsApprovedDevice(pnpDeviceId) && IsAvailableSerialPort(deviceId))
-                        {
-                            return deviceId;
-                        }
-                    }
-                }
-
-                using (
-                    ManagementObjectSearcher plugAndPlaySearcher = new ManagementObjectSearcher(
-                        "SELECT Name, PNPDeviceID FROM Win32_PnPEntity"
-                    )
-                )
-                {
-                    foreach (ManagementObject device in plugAndPlaySearcher.Get())
-                    {
-                        string deviceName = Convert.ToString(device["Name"]);
-                        string pnpDeviceId = Convert.ToString(device["PNPDeviceID"]);
-                        if (IsApprovedDevice(pnpDeviceId) == false)
-                        {
-                            continue;
-                        }
-
-                        foreach (string availablePort in SerialPort.GetPortNames())
-                        {
-                            if (deviceName.IndexOf("(" + availablePort + ")", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                return availablePort;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (ManagementException)
-            {
-                return string.Empty;
-            }
-
-            return string.Empty;
-        }
-
-        private static bool IsApprovedDevice(string pnpDeviceId)
-        {
-            if (string.IsNullOrEmpty(pnpDeviceId))
-            {
-                return false;
-            }
-
-            return pnpDeviceId.IndexOf(ApprovedVendorId, StringComparison.OrdinalIgnoreCase) >= 0
-                && pnpDeviceId.IndexOf(ApprovedProductId, StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-        private static bool IsAvailableSerialPort(string portName)
-        {
-            foreach (string availablePort in SerialPort.GetPortNames())
-            {
-                if (string.Equals(availablePort, portName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         // وضعیت فرم

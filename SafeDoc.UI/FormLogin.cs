@@ -96,7 +96,7 @@ namespace SafeDoc.UI
 
         private string CheckDeviceToken()
         {
-            string approvedPort = FormMain.FindApprovedDevicePort();
+            string approvedPort = DevicePortFinder.FindApprovedDevicePort();
             if (string.IsNullOrWhiteSpace(approvedPort))
             {
                 return "دستگاه مورد نظر پیدا نشد.";
