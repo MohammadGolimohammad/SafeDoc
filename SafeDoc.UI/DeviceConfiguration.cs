@@ -37,6 +37,14 @@ namespace SafeDoc.UI
             }
         }
 
+        internal static int CommandIntervalMilliseconds
+        {
+            get
+            {
+                return ReadNumber("CommandIntervalMilliseconds");
+            }
+        }
+
         internal static int CommandTimeoutMilliseconds
         {
             get
