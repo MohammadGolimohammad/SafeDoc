@@ -82,16 +82,6 @@ namespace SafeDoc.UI
             this.currentTimeTitle = new System.Windows.Forms.Label();
             this.groupUsers = new System.Windows.Forms.GroupBox();
             this.dgvUsers = new System.Windows.Forms.DataGridView();
-            this.ColumnUserId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnUserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnPass = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnExpireDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnExpireTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnFlashPermission = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.ColumnEdit = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnDelete = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnFingerprint = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnFingerprintStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnSaveSelectedUserPassword = new System.Windows.Forms.Button();
             this.btnGetSelectedUserPasswords = new System.Windows.Forms.Button();
             this.fpId = new System.Windows.Forms.Label();
@@ -667,95 +657,6 @@ namespace SafeDoc.UI
             this.dgvUsers.CurrentCellDirtyStateChanged += new System.EventHandler(this.dgvUsers_CurrentCellDirtyStateChanged);
             this.dgvUsers.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dgvUsers_DataBindingComplete);
             this.dgvUsers.SelectionChanged += new System.EventHandler(this.dgvUsers_SelectionChanged);
-            // 
-            // ColumnUserId
-            // 
-            this.ColumnUserId.DataPropertyName = "UserId";
-            this.ColumnUserId.FillWeight = 40F;
-            this.ColumnUserId.HeaderText = "ID";
-            this.ColumnUserId.MinimumWidth = 3;
-            this.ColumnUserId.Name = "ColumnUserId";
-            this.ColumnUserId.ReadOnly = true;
-            this.ColumnUserId.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            // 
-            // ColumnUserName
-            // 
-            this.ColumnUserName.DataPropertyName = "UserName";
-            this.ColumnUserName.HeaderText = "نام کاربری";
-            this.ColumnUserName.Name = "ColumnUserName";
-            this.ColumnUserName.ReadOnly = true;
-            // 
-            // ColumnPass
-            // 
-            this.ColumnPass.DataPropertyName = "Pass";
-            this.ColumnPass.FillWeight = 110F;
-            this.ColumnPass.HeaderText = "رمز";
-            this.ColumnPass.Name = "ColumnPass";
-            this.ColumnPass.ReadOnly = true;
-            this.ColumnPass.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // ColumnExpireDate
-            // 
-            this.ColumnExpireDate.DataPropertyName = "ExpireDate";
-            this.ColumnExpireDate.FillWeight = 89.65736F;
-            this.ColumnExpireDate.HeaderText = "تاریخ انقضا";
-            this.ColumnExpireDate.Name = "ColumnExpireDate";
-            this.ColumnExpireDate.ReadOnly = true;
-            // 
-            // ColumnExpireTime
-            // 
-            this.ColumnExpireTime.DataPropertyName = "ExpireTime";
-            this.ColumnExpireTime.FillWeight = 89.65736F;
-            this.ColumnExpireTime.HeaderText = "زمان انقضا";
-            this.ColumnExpireTime.Name = "ColumnExpireTime";
-            this.ColumnExpireTime.ReadOnly = true;
-            // 
-            // ColumnFlashPermission
-            // 
-            this.ColumnFlashPermission.DataPropertyName = "FlashPermission";
-            this.ColumnFlashPermission.FillWeight = 89.65736F;
-            this.ColumnFlashPermission.HeaderText = "مجوز فلش";
-            this.ColumnFlashPermission.Name = "ColumnFlashPermission";
-            this.ColumnFlashPermission.ReadOnly = true;
-            // 
-            // ColumnEdit
-            // 
-            this.ColumnEdit.FillWeight = 89.65736F;
-            this.ColumnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnEdit.HeaderText = "ویرایش";
-            this.ColumnEdit.Name = "ColumnEdit";
-            this.ColumnEdit.ReadOnly = true;
-            this.ColumnEdit.Text = "✎";
-            this.ColumnEdit.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnDelete
-            // 
-            this.ColumnDelete.FillWeight = 89.65736F;
-            this.ColumnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnDelete.HeaderText = "حذف";
-            this.ColumnDelete.Name = "ColumnDelete";
-            this.ColumnDelete.ReadOnly = true;
-            this.ColumnDelete.Text = "حذف";
-            this.ColumnDelete.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnFingerprint
-            // 
-            this.ColumnFingerprint.FillWeight = 89.65736F;
-            this.ColumnFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnFingerprint.HeaderText = "انگشت";
-            this.ColumnFingerprint.Name = "ColumnFingerprint";
-            this.ColumnFingerprint.ReadOnly = true;
-            this.ColumnFingerprint.Text = "ثبت";
-            this.ColumnFingerprint.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnFingerprintStatus
-            // 
-            this.ColumnFingerprintStatus.DataPropertyName = "FingerprintStatus";
-            this.ColumnFingerprintStatus.FillWeight = 89.65736F;
-            this.ColumnFingerprintStatus.HeaderText = "وضعیت";
-            this.ColumnFingerprintStatus.Name = "ColumnFingerprintStatus";
-            this.ColumnFingerprintStatus.ReadOnly = true;
-            // 
             // btnSaveSelectedUserPassword
             // 
             this.btnSaveSelectedUserPassword.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
