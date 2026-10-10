@@ -156,6 +156,11 @@ namespace SafeDoc.Device
                 _receivedText.Append(receivedPart);
                 string receivedJson = _receivedText.ToString().Trim('\0', ' ', '\r', '\n', '\t');
                 receivedJson = NormalizeSettingsResponse(receivedJson);
+                if (IsCompleteJson(receivedJson) == false)
+                {
+                    return;
+                }
+
                 JObject responseObject;
                 try
                 {
@@ -190,11 +195,71 @@ namespace SafeDoc.Device
             string normalizedJson = Regex.Replace(receivedJson, @"\[\s*\{\s*\{", "[{");
             normalizedJson = Regex.Replace(
                 normalizedJson,
-                @"\}\s*,\s*\{\s*\""date\""\s*:",
-                ", \"date\":"
+                @"\}\s*,\s*\{\s*\""date\""\s*:\s*(\""[^\""\r\n]*\"")\s*\}\s*,",
+                ", \"date\": $1,"
             );
 
             return normalizedJson;
+        }
+
+        private static bool IsCompleteJson(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text[0] != '{' || text[text.Length - 1] != '}')
+            {
+                return false;
+            }
+
+            int openBraces = 0;
+            bool insideText = false;
+            bool escapedCharacter = false;
+
+            foreach (char character in text)
+            {
+                if (insideText)
+                {
+                    if (escapedCharacter)
+                    {
+                        escapedCharacter = false;
+                        continue;
+                    }
+
+                    if (character == '\\')
+                    {
+                        escapedCharacter = true;
+                        continue;
+                    }
+
+                    if (character == '"')
+                    {
+                        insideText = false;
+                    }
+
+                    continue;
+                }
+
+                if (character == '"')
+                {
+                    insideText = true;
+                    continue;
+                }
+
+                if (character == '{')
+                {
+                    openBraces++;
+                    continue;
+                }
+
+                if (character == '}')
+                {
+                    openBraces--;
+                    if (openBraces < 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return openBraces == 0 && insideText == false;
         }
 
         private void OnSerialError(object sender, string errorMessage)
