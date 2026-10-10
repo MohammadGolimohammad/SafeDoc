@@ -52,6 +52,11 @@ namespace SafeDoc.Business
             return _client.ReadResponseData<T>(response);
         }
 
+        public SafeDocDeviceSettings ReadDeviceSettings(SafeDocResponse response)
+        {
+            return _client.ReadDeviceSettings(response);
+        }
+
         public System.Collections.Generic.List<T> ReadResponseList<T>(SafeDocResponse response)
         {
             return _client.ReadResponseList<T>(response);

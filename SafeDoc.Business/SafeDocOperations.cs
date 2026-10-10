@@ -97,7 +97,9 @@ namespace SafeDoc.Business
 
         public SafeDocResponse GetDeviceDateTime(out SafeDocDeviceSettings settings)
         {
-            return GetAllSettings(out settings);
+            SafeDocResponse response = GetDeviceDateTime();
+            settings = _connection.ReadDeviceSettings(response);
+            return response;
         }
 
         public SafeDocResponse GetPasswordNames(string userId)
@@ -212,7 +214,7 @@ namespace SafeDoc.Business
         public SafeDocResponse GetAllSettings(out SafeDocDeviceSettings settings)
         {
             SafeDocResponse response = GetAllSettings();
-            settings = _connection.ReadResponseData<SafeDocDeviceSettings>(response);
+            settings = _connection.ReadDeviceSettings(response);
             return response;
         }
 

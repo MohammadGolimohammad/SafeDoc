@@ -101,6 +101,59 @@ namespace SafeDoc.Device
             return JsonConvert.DeserializeObject<T>(dataJson) ?? new T();
         }
 
+        public SafeDocDeviceSettings ReadDeviceSettings(SafeDocResponse response)
+        {
+            SafeDocDeviceSettings settings = new SafeDocDeviceSettings();
+            if (response == null || response.resultData == null)
+            {
+                return settings;
+            }
+
+            foreach (object result in response.resultData)
+            {
+                string resultJson = JsonConvert.SerializeObject(result);
+                SafeDocDeviceSettings current = JsonConvert.DeserializeObject<SafeDocDeviceSettings>(
+                    resultJson
+                );
+                if (current == null)
+                {
+                    continue;
+                }
+
+                if (resultJson.IndexOf("\"time\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.Time = current.Time;
+                }
+
+                if (resultJson.IndexOf("\"date\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.Date = current.Date;
+                }
+
+                if (resultJson.IndexOf("\"enterStatus\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.EnterStatus = current.EnterStatus;
+                }
+
+                if (resultJson.IndexOf("\"usbConnectionTimeoutValue\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.UsbConnectionTimeoutValue = current.UsbConnectionTimeoutValue;
+                }
+
+                if (resultJson.IndexOf("\"HidStatusAfterExpiration\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.HidStatusAfterExpiration = current.HidStatusAfterExpiration;
+                }
+
+                if (resultJson.IndexOf("\"buzzerStatus\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.BuzzerStatus = current.BuzzerStatus;
+                }
+            }
+
+            return settings;
+        }
+
         public System.Collections.Generic.List<T> ReadResponseList<T>(SafeDocResponse response)
         {
             if (response == null || response.resultData == null)
@@ -187,7 +240,6 @@ namespace SafeDoc.Device
             if (
                 receivedJson.IndexOf("\"time\"", StringComparison.OrdinalIgnoreCase) < 0
                 || receivedJson.IndexOf("\"date\"", StringComparison.OrdinalIgnoreCase) < 0
-                || receivedJson.IndexOf("\"enterStatus\"", StringComparison.OrdinalIgnoreCase) < 0
             )
             {
                 return receivedJson;
