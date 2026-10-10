@@ -329,7 +329,7 @@ namespace SafeDoc.UI
             this.nudUsbUseCount.ForeColor = System.Drawing.Color.White;
             this.nudUsbUseCount.Location = new System.Drawing.Point(593, 80);
             this.nudUsbUseCount.Maximum = new decimal(new int[] {
-            99,
+            255,
             0,
             0,
             0});

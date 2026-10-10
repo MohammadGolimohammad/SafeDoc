@@ -1009,9 +1009,9 @@ namespace SafeDoc.UI
                 return 1;
             }
 
-            if (count > 99)
+            if (count > 255)
             {
-                return 99;
+                return 255;
             }
 
             return count;
