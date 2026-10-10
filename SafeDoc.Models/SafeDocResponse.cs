@@ -6,15 +6,18 @@ namespace SafeDoc.Models
     {
         public bool isSuccess
         {
-            get; set;
+            get;
+            set;
         }
         public int responseStatusCode
         {
-            get; set;
+            get;
+            set;
         }
         public List<object> resultData
         {
-            get; set;
+            get; 
+            set;
         } = new List<object>();
     }
 }
