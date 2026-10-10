@@ -214,9 +214,7 @@ namespace SafeDoc.UI
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
-                Thread.Sleep(DeviceConfiguration.CommandIntervalMilliseconds);
                 ReadDeviceSettings();
-                Thread.Sleep(DeviceConfiguration.CommandIntervalMilliseconds);
                 ReadUsersFromDevice();
                 SetConnected(true);
             }
@@ -255,10 +253,7 @@ namespace SafeDoc.UI
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("توکن دستگاه تأیید شد.", true);
-                Status("دستگاه پس از تأیید توکن در حال آماده‌سازی است...", true);
-                Thread.Sleep(DeviceConfiguration.CommandIntervalMilliseconds);
                 ReadDeviceSettings();
-                Thread.Sleep(DeviceConfiguration.CommandIntervalMilliseconds);
                 ReadUsersFromDevice();
                 SetConnected(true);
             }
@@ -280,7 +275,8 @@ namespace SafeDoc.UI
                 connection,
                 DeviceConfiguration.CommandTimeoutMilliseconds,
                 DeviceConfiguration.SettingsTimeoutMilliseconds,
-                DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds
+                DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds,
+                DeviceConfiguration.CommandIntervalMilliseconds
             );
         }
 
@@ -1298,7 +1294,6 @@ namespace SafeDoc.UI
                 {
                     return;
                 }
-                Thread.Sleep(DeviceConfiguration.CommandIntervalMilliseconds);
                 SafeDocResponse response = _operations.DeleteFingerprint(selectedUser.UserId.ToString());
                 ShowDeviceResponse(response);
                 if (response.isSuccess)
@@ -1493,7 +1488,6 @@ namespace SafeDoc.UI
 
                 if (response.isSuccess)
                 {
-                    Thread.Sleep(DeviceConfiguration.CommandIntervalMilliseconds);
                     ReadCurrentDeviceDateTime();
                 }
             }

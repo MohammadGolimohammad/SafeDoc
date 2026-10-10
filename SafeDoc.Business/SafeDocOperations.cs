@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using SafeDoc.Models;
 
 namespace SafeDoc.Business
@@ -10,12 +11,14 @@ namespace SafeDoc.Business
         private readonly int _commandTimeoutMilliseconds;
         private readonly int _settingsTimeoutMilliseconds;
         private readonly int _fingerprintEnrollTimeoutMilliseconds;
+        private readonly int _commandIntervalMilliseconds;
 
         public SafeDocOperations(
             DeviceConnectionService connection,
             int commandTimeoutMilliseconds,
             int settingsTimeoutMilliseconds,
-            int fingerprintEnrollTimeoutMilliseconds
+            int fingerprintEnrollTimeoutMilliseconds,
+            int commandIntervalMilliseconds
         )
         {
             if (connection == null)
@@ -27,6 +30,7 @@ namespace SafeDoc.Business
             _commandTimeoutMilliseconds = commandTimeoutMilliseconds;
             _settingsTimeoutMilliseconds = settingsTimeoutMilliseconds;
             _fingerprintEnrollTimeoutMilliseconds = fingerprintEnrollTimeoutMilliseconds;
+            _commandIntervalMilliseconds = commandIntervalMilliseconds;
         }
 
         public SafeDocResponse EnrollFingerprint(string userId)
@@ -295,7 +299,14 @@ namespace SafeDoc.Business
                 timeoutMilliseconds = _fingerprintEnrollTimeoutMilliseconds;
             }
 
-            return _connection.SendCommand(command, timeoutMilliseconds);
+            try
+            {
+                return _connection.SendCommand(command, timeoutMilliseconds);
+            }
+            finally
+            {
+                Thread.Sleep(_commandIntervalMilliseconds);
+            }
         }
 
         private static object User(string userId)

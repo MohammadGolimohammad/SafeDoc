@@ -111,7 +111,8 @@ namespace SafeDoc.UI
                     connection,
                     DeviceConfiguration.CommandTimeoutMilliseconds,
                     DeviceConfiguration.SettingsTimeoutMilliseconds,
-                    DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds
+                    DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds,
+                    DeviceConfiguration.CommandIntervalMilliseconds
                 );
                 SafeDocResponse response = operations.CheckToken(_accessToken);
                 if (response.isSuccess)
