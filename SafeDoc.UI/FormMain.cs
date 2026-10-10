@@ -713,6 +713,7 @@ namespace SafeDoc.UI
             if (selectedUser == null || selectedUser.UserId.HasValue == false)
             {
                 Status("ابتدا یک کاربر را از گرید انتخاب کنید.", false);
+                ShowValidationMessage("یک ردیف از لیست کاربران را انتخاب کنید.");
                 return false;
             }
 
@@ -972,6 +973,7 @@ namespace SafeDoc.UI
             if (passwordName.Length == 0 || passwordName.Length > 10)
             {
                 Status("نام رمز باید بین ۱ تا ۱۰ کاراکتر باشد.", false);
+                ShowValidationMessage("نام رمز را بین ۱ تا ۱۰ کاراکتر وارد کنید.");
                 return;
             }
 
@@ -979,6 +981,14 @@ namespace SafeDoc.UI
             if (password.Length == 0 || password.Length > 20)
             {
                 Status("رمز باید بین ۱ تا ۲۰ کاراکتر باشد.", false);
+                ShowValidationMessage("گذرواژه را بین ۱ تا ۲۰ کاراکتر وارد کنید.");
+                return;
+            }
+
+            if (IsAllowedPassword(password) == false)
+            {
+                Status("رمز فقط می‌تواند شامل حروف، عدد و علامت‌های انگلیسی باشد.", false);
+                ShowValidationMessage("گذرواژه را با حروف، عدد و علامت‌های انگلیسی وارد کنید.");
                 return;
             }
 
@@ -1046,18 +1056,21 @@ namespace SafeDoc.UI
             if (passName.Length == 0 || passName.Length > 10)
             {
                 Status("نام کاربری باید بین ۱ تا ۱۰ کاراکتر باشد.", false);
+                ShowValidationMessage("نام کاربری را بین ۱ تا ۱۰ کاراکتر وارد کنید.");
                 return;
             }
 
             if (pass.Length == 0 || pass.Length > 20)
             {
                 Status("رمز باید بین ۱ تا ۲۰ کاراکتر باشد.", false);
+                ShowValidationMessage("گذرواژه را بین ۱ تا ۲۰ کاراکتر وارد کنید.");
                 return;
             }
 
             if (IsAllowedPassword(pass) == false)
             {
                 Status("رمز فقط می‌تواند شامل حروف، عدد و علامت‌های انگلیسی باشد.", false);
+                ShowValidationMessage("گذرواژه را با حروف، عدد و علامت‌های انگلیسی وارد کنید.");
                 return;
             }
 
@@ -1080,6 +1093,7 @@ namespace SafeDoc.UI
                 if (userId < 1 || userId > 10)
                 {
                     Status("ابتدا ثبت کاربر جدید را بزنید تا شناسه از دستگاه گرفته شود.", false);
+                    ShowValidationMessage("ابتدا دکمه «ثبت کاربر جدید» را بزنید.");
                     return;
                 }
 
@@ -1720,6 +1734,7 @@ namespace SafeDoc.UI
             catch (ArgumentOutOfRangeException)
             {
                 Status("تاریخ یا ساعت معتبر نیست.", false);
+                ShowValidationMessage("تاریخ و ساعت انقضا را به‌صورت معتبر وارد کنید.");
                 return false;
             }
         }
@@ -1759,6 +1774,15 @@ namespace SafeDoc.UI
         private void ShowValidationMessage(string instruction)
         {
             SetOperationProgress(100, "مقدار واردشده معتبر نیست: " + instruction);
+            MessageBox.Show(
+                "⚠ اطلاعات واردشده معتبر نیست."
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + instruction,
+                "بررسی اطلاعات",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
         }
         private static string NormalizeDigits(string value)
         {
@@ -1827,9 +1851,10 @@ namespace SafeDoc.UI
             }
 
             int timeout;
-            if (int.TryParse(txtUsbTimeout.Text, out timeout) == false)
+            if (int.TryParse(txtUsbTimeout.Text, out timeout) == false || timeout < 0)
             {
                 Status("مهلت دسترسی USB به حافظه داخلی را فقط به صورت عدد وارد کنید.", false);
+                ShowValidationMessage("مهلت دسترسی USB را با عدد صفر یا بزرگ‌تر وارد کنید.");
                 return;
             }
 
