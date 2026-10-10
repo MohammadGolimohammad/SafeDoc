@@ -87,6 +87,18 @@ namespace SafeDoc.UI
             this.currentTimeTitle = new System.Windows.Forms.Label();
             this.groupUsers = new System.Windows.Forms.GroupBox();
             this.dgvUsers = new System.Windows.Forms.DataGridView();
+            this.ColumnUserId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnUserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnPass = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnExpireDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnExpireTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnFlashPermission = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.ColumnUsbUseCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnUsbUsedTimes = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnEdit = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ColumnDelete = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ColumnFingerprint = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ColumnFingerprintStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnSaveSelectedUserPassword = new System.Windows.Forms.Button();
             this.btnGetSelectedUserPasswords = new System.Windows.Forms.Button();
             this.fpId = new System.Windows.Forms.Label();
@@ -110,18 +122,6 @@ namespace SafeDoc.UI
             this.btnDeletePassword = new System.Windows.Forms.Button();
             this.btnShowPasswords = new System.Windows.Forms.Button();
             this.btnDeleteAllPasswords = new System.Windows.Forms.Button();
-            this.ColumnUserId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnUserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnPass = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnExpireDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnExpireTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnFlashPermission = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.ColumnUsbUseCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnUsbUsedTimes = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnEdit = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnDelete = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnFingerprint = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnFingerprintStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pnlMain.SuspendLayout();
             this.connection.SuspendLayout();
             this.operationStatusStrip.SuspendLayout();
@@ -256,7 +256,7 @@ namespace SafeDoc.UI
             // lblPasswordStrength
             // 
             this.lblPasswordStrength.AutoSize = true;
-            this.lblPasswordStrength.Location = new System.Drawing.Point(408, 81);
+            this.lblPasswordStrength.Location = new System.Drawing.Point(503, 70);
             this.lblPasswordStrength.Name = "lblPasswordStrength";
             this.lblPasswordStrength.Size = new System.Drawing.Size(65, 16);
             this.lblPasswordStrength.TabIndex = 10;
@@ -305,7 +305,7 @@ namespace SafeDoc.UI
             // chkFlashPermission
             // 
             this.chkFlashPermission.AutoSize = true;
-            this.chkFlashPermission.Location = new System.Drawing.Point(489, 61);
+            this.chkFlashPermission.Location = new System.Drawing.Point(179, 28);
             this.chkFlashPermission.Name = "chkFlashPermission";
             this.chkFlashPermission.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkFlashPermission.Size = new System.Drawing.Size(76, 20);
@@ -313,21 +313,21 @@ namespace SafeDoc.UI
             this.chkFlashPermission.Text = "مجوز فلش";
             this.chkFlashPermission.UseVisualStyleBackColor = true;
             this.chkFlashPermission.CheckedChanged += new System.EventHandler(this.chkFlashPermission_CheckedChanged);
-            //
+            // 
             // lblUsbUseCount
-            //
+            // 
             this.lblUsbUseCount.AutoSize = true;
-            this.lblUsbUseCount.Location = new System.Drawing.Point(477, 83);
+            this.lblUsbUseCount.Location = new System.Drawing.Point(79, 29);
             this.lblUsbUseCount.Name = "lblUsbUseCount";
-            this.lblUsbUseCount.Size = new System.Drawing.Size(109, 16);
+            this.lblUsbUseCount.Size = new System.Drawing.Size(94, 16);
             this.lblUsbUseCount.TabIndex = 15;
             this.lblUsbUseCount.Text = "دفعات مجاز روزانه:";
-            //
+            // 
             // nudUsbUseCount
-            //
+            // 
             this.nudUsbUseCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
             this.nudUsbUseCount.ForeColor = System.Drawing.Color.White;
-            this.nudUsbUseCount.Location = new System.Drawing.Point(593, 80);
+            this.nudUsbUseCount.Location = new System.Drawing.Point(22, 27);
             this.nudUsbUseCount.Maximum = new decimal(new int[] {
             255,
             0,
@@ -401,7 +401,7 @@ namespace SafeDoc.UI
             this.btnCancelUser.ForeColor = System.Drawing.Color.White;
             this.btnCancelUser.Location = new System.Drawing.Point(22, 62);
             this.btnCancelUser.Name = "btnCancelUser";
-            this.btnCancelUser.Size = new System.Drawing.Size(117, 24);
+            this.btnCancelUser.Size = new System.Drawing.Size(113, 24);
             this.btnCancelUser.TabIndex = 6;
             this.btnCancelUser.Text = "انصراف";
             this.btnCancelUser.UseVisualStyleBackColor = false;
@@ -447,7 +447,7 @@ namespace SafeDoc.UI
             this.btnEnrollFingerprint.FlatAppearance.BorderSize = 0;
             this.btnEnrollFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEnrollFingerprint.ForeColor = System.Drawing.Color.White;
-            this.btnEnrollFingerprint.Location = new System.Drawing.Point(145, 62);
+            this.btnEnrollFingerprint.Location = new System.Drawing.Point(141, 62);
             this.btnEnrollFingerprint.Name = "btnEnrollFingerprint";
             this.btnEnrollFingerprint.Size = new System.Drawing.Size(117, 24);
             this.btnEnrollFingerprint.TabIndex = 5;
@@ -716,6 +716,111 @@ namespace SafeDoc.UI
             this.dgvUsers.CurrentCellDirtyStateChanged += new System.EventHandler(this.dgvUsers_CurrentCellDirtyStateChanged);
             this.dgvUsers.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dgvUsers_DataBindingComplete);
             this.dgvUsers.SelectionChanged += new System.EventHandler(this.dgvUsers_SelectionChanged);
+            // 
+            // ColumnUserId
+            // 
+            this.ColumnUserId.DataPropertyName = "UserId";
+            this.ColumnUserId.FillWeight = 40F;
+            this.ColumnUserId.HeaderText = "ID";
+            this.ColumnUserId.MinimumWidth = 3;
+            this.ColumnUserId.Name = "ColumnUserId";
+            this.ColumnUserId.ReadOnly = true;
+            this.ColumnUserId.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            // 
+            // ColumnUserName
+            // 
+            this.ColumnUserName.DataPropertyName = "UserName";
+            this.ColumnUserName.HeaderText = "نام کاربری";
+            this.ColumnUserName.Name = "ColumnUserName";
+            this.ColumnUserName.ReadOnly = true;
+            // 
+            // ColumnPass
+            // 
+            this.ColumnPass.DataPropertyName = "Pass";
+            this.ColumnPass.FillWeight = 110F;
+            this.ColumnPass.HeaderText = "رمز";
+            this.ColumnPass.Name = "ColumnPass";
+            this.ColumnPass.ReadOnly = true;
+            this.ColumnPass.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // ColumnExpireDate
+            // 
+            this.ColumnExpireDate.DataPropertyName = "ExpireDate";
+            this.ColumnExpireDate.FillWeight = 89.65736F;
+            this.ColumnExpireDate.HeaderText = "تاریخ انقضا";
+            this.ColumnExpireDate.Name = "ColumnExpireDate";
+            this.ColumnExpireDate.ReadOnly = true;
+            // 
+            // ColumnExpireTime
+            // 
+            this.ColumnExpireTime.DataPropertyName = "ExpireTime";
+            this.ColumnExpireTime.FillWeight = 89.65736F;
+            this.ColumnExpireTime.HeaderText = "زمان انقضا";
+            this.ColumnExpireTime.Name = "ColumnExpireTime";
+            this.ColumnExpireTime.ReadOnly = true;
+            // 
+            // ColumnFlashPermission
+            // 
+            this.ColumnFlashPermission.DataPropertyName = "FlashPermission";
+            this.ColumnFlashPermission.FillWeight = 89.65736F;
+            this.ColumnFlashPermission.HeaderText = "مجوز فلش";
+            this.ColumnFlashPermission.Name = "ColumnFlashPermission";
+            this.ColumnFlashPermission.ReadOnly = true;
+            // 
+            // ColumnUsbUseCount
+            // 
+            this.ColumnUsbUseCount.DataPropertyName = "UsbUseCount";
+            this.ColumnUsbUseCount.FillWeight = 75F;
+            this.ColumnUsbUseCount.HeaderText = "تعداد مجاز USB";
+            this.ColumnUsbUseCount.Name = "ColumnUsbUseCount";
+            this.ColumnUsbUseCount.ReadOnly = true;
+            // 
+            // ColumnUsbUsedTimes
+            // 
+            this.ColumnUsbUsedTimes.DataPropertyName = "UsbUsedTimes";
+            this.ColumnUsbUsedTimes.FillWeight = 75F;
+            this.ColumnUsbUsedTimes.HeaderText = "دفعات استفاده USB";
+            this.ColumnUsbUsedTimes.Name = "ColumnUsbUsedTimes";
+            this.ColumnUsbUsedTimes.ReadOnly = true;
+            // 
+            // ColumnEdit
+            // 
+            this.ColumnEdit.FillWeight = 89.65736F;
+            this.ColumnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ColumnEdit.HeaderText = "ویرایش";
+            this.ColumnEdit.Name = "ColumnEdit";
+            this.ColumnEdit.ReadOnly = true;
+            this.ColumnEdit.Text = "✎";
+            this.ColumnEdit.UseColumnTextForButtonValue = true;
+            // 
+            // ColumnDelete
+            // 
+            this.ColumnDelete.FillWeight = 89.65736F;
+            this.ColumnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ColumnDelete.HeaderText = "حذف";
+            this.ColumnDelete.Name = "ColumnDelete";
+            this.ColumnDelete.ReadOnly = true;
+            this.ColumnDelete.Text = "حذف";
+            this.ColumnDelete.UseColumnTextForButtonValue = true;
+            // 
+            // ColumnFingerprint
+            // 
+            this.ColumnFingerprint.FillWeight = 89.65736F;
+            this.ColumnFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ColumnFingerprint.HeaderText = "انگشت";
+            this.ColumnFingerprint.Name = "ColumnFingerprint";
+            this.ColumnFingerprint.ReadOnly = true;
+            this.ColumnFingerprint.Text = "ثبت";
+            this.ColumnFingerprint.UseColumnTextForButtonValue = true;
+            // 
+            // ColumnFingerprintStatus
+            // 
+            this.ColumnFingerprintStatus.DataPropertyName = "FingerprintStatus";
+            this.ColumnFingerprintStatus.FillWeight = 89.65736F;
+            this.ColumnFingerprintStatus.HeaderText = "وضعیت";
+            this.ColumnFingerprintStatus.Name = "ColumnFingerprintStatus";
+            this.ColumnFingerprintStatus.ReadOnly = true;
+            // 
             // btnSaveSelectedUserPassword
             // 
             this.btnSaveSelectedUserPassword.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
@@ -997,110 +1102,6 @@ namespace SafeDoc.UI
             this.btnDeleteAllPasswords.Text = "حذف همه رمزها";
             this.btnDeleteAllPasswords.UseVisualStyleBackColor = false;
             this.btnDeleteAllPasswords.Click += new System.EventHandler(this.btnDeleteAllPasswords_Click);
-            // 
-            // ColumnUserId
-            // 
-            this.ColumnUserId.DataPropertyName = "UserId";
-            this.ColumnUserId.FillWeight = 40F;
-            this.ColumnUserId.HeaderText = "ID";
-            this.ColumnUserId.MinimumWidth = 3;
-            this.ColumnUserId.Name = "ColumnUserId";
-            this.ColumnUserId.ReadOnly = true;
-            this.ColumnUserId.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            // 
-            // ColumnUserName
-            // 
-            this.ColumnUserName.DataPropertyName = "UserName";
-            this.ColumnUserName.HeaderText = "نام کاربری";
-            this.ColumnUserName.Name = "ColumnUserName";
-            this.ColumnUserName.ReadOnly = true;
-            // 
-            // ColumnPass
-            // 
-            this.ColumnPass.DataPropertyName = "Pass";
-            this.ColumnPass.FillWeight = 110F;
-            this.ColumnPass.HeaderText = "رمز";
-            this.ColumnPass.Name = "ColumnPass";
-            this.ColumnPass.ReadOnly = true;
-            this.ColumnPass.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // ColumnExpireDate
-            // 
-            this.ColumnExpireDate.DataPropertyName = "ExpireDate";
-            this.ColumnExpireDate.FillWeight = 89.65736F;
-            this.ColumnExpireDate.HeaderText = "تاریخ انقضا";
-            this.ColumnExpireDate.Name = "ColumnExpireDate";
-            this.ColumnExpireDate.ReadOnly = true;
-            // 
-            // ColumnExpireTime
-            // 
-            this.ColumnExpireTime.DataPropertyName = "ExpireTime";
-            this.ColumnExpireTime.FillWeight = 89.65736F;
-            this.ColumnExpireTime.HeaderText = "زمان انقضا";
-            this.ColumnExpireTime.Name = "ColumnExpireTime";
-            this.ColumnExpireTime.ReadOnly = true;
-            // 
-            // ColumnFlashPermission
-            // 
-            this.ColumnFlashPermission.DataPropertyName = "FlashPermission";
-            this.ColumnFlashPermission.FillWeight = 89.65736F;
-            this.ColumnFlashPermission.HeaderText = "مجوز فلش";
-            this.ColumnFlashPermission.Name = "ColumnFlashPermission";
-            this.ColumnFlashPermission.ReadOnly = true;
-            // 
-            // ColumnUsbUseCount
-            // 
-            this.ColumnUsbUseCount.DataPropertyName = "UsbUseCount";
-            this.ColumnUsbUseCount.FillWeight = 75F;
-            this.ColumnUsbUseCount.HeaderText = "تعداد مجاز USB";
-            this.ColumnUsbUseCount.Name = "ColumnUsbUseCount";
-            this.ColumnUsbUseCount.ReadOnly = true;
-            // 
-            // ColumnUsbUsedTimes
-            // 
-            this.ColumnUsbUsedTimes.DataPropertyName = "UsbUsedTimes";
-            this.ColumnUsbUsedTimes.FillWeight = 75F;
-            this.ColumnUsbUsedTimes.HeaderText = "دفعات استفاده USB";
-            this.ColumnUsbUsedTimes.Name = "ColumnUsbUsedTimes";
-            this.ColumnUsbUsedTimes.ReadOnly = true;
-            // 
-            // ColumnEdit
-            // 
-            this.ColumnEdit.FillWeight = 89.65736F;
-            this.ColumnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnEdit.HeaderText = "ویرایش";
-            this.ColumnEdit.Name = "ColumnEdit";
-            this.ColumnEdit.ReadOnly = true;
-            this.ColumnEdit.Text = "✎";
-            this.ColumnEdit.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnDelete
-            // 
-            this.ColumnDelete.FillWeight = 89.65736F;
-            this.ColumnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnDelete.HeaderText = "حذف";
-            this.ColumnDelete.Name = "ColumnDelete";
-            this.ColumnDelete.ReadOnly = true;
-            this.ColumnDelete.Text = "حذف";
-            this.ColumnDelete.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnFingerprint
-            // 
-            this.ColumnFingerprint.FillWeight = 89.65736F;
-            this.ColumnFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnFingerprint.HeaderText = "انگشت";
-            this.ColumnFingerprint.Name = "ColumnFingerprint";
-            this.ColumnFingerprint.ReadOnly = true;
-            this.ColumnFingerprint.Text = "ثبت";
-            this.ColumnFingerprint.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnFingerprintStatus
-            // 
-            this.ColumnFingerprintStatus.DataPropertyName = "FingerprintStatus";
-            this.ColumnFingerprintStatus.FillWeight = 89.65736F;
-            this.ColumnFingerprintStatus.HeaderText = "وضعیت";
-            this.ColumnFingerprintStatus.Name = "ColumnFingerprintStatus";
-            this.ColumnFingerprintStatus.ReadOnly = true;
             // 
             // FormMain
             // 
