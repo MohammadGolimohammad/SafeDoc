@@ -24,6 +24,14 @@ namespace SafeDoc.Business
             }
         }
 
+        public string PortName
+        {
+            get
+            {
+                return _client.PortName;
+            }
+        }
+
         public event EventHandler<string> RawDataReceived;
         public event EventHandler<string> ErrorOccurred;
         public event EventHandler<string> CommandSent;

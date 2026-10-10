@@ -33,6 +33,14 @@ namespace SafeDoc.Device
             }
         }
 
+        public string PortName
+        {
+            get
+            {
+                return _serialPort.PortName;
+            }
+        }
+
         public event EventHandler<string> CommandSent;
         public event EventHandler<string> RawDataReceived;
         public event EventHandler<string> ErrorOccurred;
