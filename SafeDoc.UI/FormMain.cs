@@ -71,7 +71,7 @@ namespace SafeDoc.UI
                 "فعال‌بودن HID پس از انقضا"
             );
         }
-        private static void UpdateToggleButton(Button button,bool enabled,bool statusIsKnown,string operationName)
+        private static void UpdateToggleButton(Button button, bool enabled, bool statusIsKnown, string operationName)
         {
             if (statusIsKnown == false)
             {
@@ -81,7 +81,7 @@ namespace SafeDoc.UI
             }
             string state = enabled ? "فعال" : "غیرفعال";
             button.Text = operationName + " (" + state + ")";
-            button.BackColor = enabled? Color.FromArgb(22, 101, 52) : Color.FromArgb(153, 27, 27);
+            button.BackColor = enabled ? Color.FromArgb(22, 101, 52) : Color.FromArgb(153, 27, 27);
         }
         // 1
         private void FormMain_Shown(object sender, EventArgs e)
@@ -217,19 +217,13 @@ namespace SafeDoc.UI
             groupUsers.Enabled = controlsEnabled;
             UpdateUserEditorState();
             lblConnection.Text = ok ? "وضعیت دستگاه تأییدشده: ● متصل" : "وضعیت دستگاه تأییدشده: ● پیدا نشد";
-            lblConnection.ForeColor = ok
-                ? System.Drawing.Color.ForestGreen
-                : System.Drawing.Color.Firebrick;
+            lblConnection.ForeColor = ok ? System.Drawing.Color.ForestGreen : System.Drawing.Color.Firebrick;
         }
-
-        // 2
         private void Status(string text, bool ok)
         {
             lblOperationProgress.Text = text;
             lblOperationProgress.ToolTipText = text;
-            lblOperationProgress.ForeColor = ok
-                ? System.Drawing.Color.FromArgb(74, 222, 128)
-                : System.Drawing.Color.FromArgb(251, 113, 133);
+            lblOperationProgress.ForeColor = ok ? System.Drawing.Color.FromArgb(74, 222, 128) : System.Drawing.Color.FromArgb(251, 113, 133);
 
             if (_operationInProgress == false)
             {
@@ -242,10 +236,8 @@ namespace SafeDoc.UI
                 SetOperationProgress(100, text);
                 EndOperationLoading();
             }
-
             operationStatusStrip.Refresh();
         }
-
         private void BeginOperationLoading(string message)
         {
             _operationInProgress = true;
@@ -357,25 +349,13 @@ namespace SafeDoc.UI
             return false;
         }
 
-        private void ShowDeviceResponse(
-            SafeDocResponse response,
-            bool showMessage = true,
-            bool completeOperation = true
-        )
+        private void ShowDeviceResponse(SafeDocResponse response, bool showMessage = true, bool completeOperation = true)
         {
             try
             {
-                string deviceResult = response.isSuccess
-                    ? "پاسخ دستگاه: عملیات موفق بود."
-                    : "پاسخ دستگاه: " + DescribeStatusCode(response.responseStatusCode);
-                SetOperationProgress(
-                    100,
-                    deviceResult
-                );
-                Status(
-                    deviceResult,
-                    response.isSuccess
-                );
+                string deviceResult = response.isSuccess ? "پاسخ دستگاه: عملیات موفق بود." : "پاسخ دستگاه: " + DescribeStatusCode(response.responseStatusCode);
+                SetOperationProgress(100,deviceResult);
+                Status(deviceResult,response.isSuccess);
                 if (completeOperation)
                 {
                     EndOperationLoading();
@@ -403,9 +383,9 @@ namespace SafeDoc.UI
                         + Environment.NewLine
                         + Environment.NewLine
                         + "آیا ادامه می‌دهید؟",
-                    "تأیید عملیات",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning
+                        "تأیید عملیات",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning
                 ) == DialogResult.Yes
             )
             {
@@ -470,10 +450,7 @@ namespace SafeDoc.UI
                     int deviceUserCount = CountRealDeviceUsers();
                     bool hasDeviceData = deviceUserCount >= 0;
                     bool listWasRead = response.isSuccess || hasDeviceData;
-                    Status(
-                        "فهرست کاربران از دستگاه خوانده شد. تعداد کاربران ثبت‌شده: " + deviceUserCount,
-                        listWasRead
-                    );
+                    Status("فهرست کاربران از دستگاه خوانده شد. تعداد کاربران ثبت‌شده: " + deviceUserCount,listWasRead);
 
                     if (completeOperation == false && listWasRead == false)
                     {
@@ -629,7 +606,7 @@ namespace SafeDoc.UI
             expirationDateSelector.Value = defaultExpiration;
             txtExpirationTime.Text = defaultExpiration.ToString("HH:mm");
             chkFlashPermission.Checked = false;
-            Status("عملیات لغو شد",true);
+            Status("عملیات لغو شد", true);
         }
 
         private void UpdateUserEditorState()
@@ -719,7 +696,7 @@ namespace SafeDoc.UI
             UpdateSelectedUser();
         }
 
-      
+
 
         private int GetNextAvailableUserId()
         {
@@ -1277,7 +1254,7 @@ namespace SafeDoc.UI
 
             DateTime selectedDate = deviceDateSelector.Value.Value;
             PersianCalendar persianCalendar = new PersianCalendar();
-            string deviceDate = string.Format("{0:0000}-{1:00}-{2:00}",persianCalendar.GetYear(selectedDate),persianCalendar.GetMonth(selectedDate),persianCalendar.GetDayOfMonth(selectedDate));
+            string deviceDate = string.Format("{0:0000}-{1:00}-{2:00}", persianCalendar.GetYear(selectedDate), persianCalendar.GetMonth(selectedDate), persianCalendar.GetDayOfMonth(selectedDate));
             string deviceTime;
             if (TryGetValidTime(txtDeviceTime.Text, out deviceTime) == false)
             {
@@ -2047,7 +2024,7 @@ namespace SafeDoc.UI
             e.Handled = true;
         }
 
-          private void dgvUsers_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvUsers_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
             {
