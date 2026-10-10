@@ -7,6 +7,7 @@ namespace SafeDoc.Business
     public sealed class SafeDocOperations
     {
         private readonly DeviceConnectionService _connection;
+        private const int GetAllSettingsTimeoutMilliseconds = 10000;
 
         public SafeDocOperations(DeviceConnectionService connection)
         {
@@ -175,7 +176,10 @@ namespace SafeDoc.Business
 
         public SafeDocResponse GetAllSettings()
         {
-            return Send(SafeDocCommandType.GetAllSettings);
+            return Send(
+                SafeDocCommandType.GetAllSettings,
+                GetAllSettingsTimeoutMilliseconds
+            );
         }
 
         public SafeDocResponse GetAllSettings(out SafeDocDeviceSettings settings)

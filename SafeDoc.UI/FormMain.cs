@@ -40,8 +40,14 @@ namespace SafeDoc.UI
         private const int DefaultUsbUseCount = 1;
 
         public FormMain()
+            : this(null)
+        {
+        }
+
+        public FormMain(DeviceConnectionService verifiedConnection)
         {
             InitializeComponent();
+            _connection = verifiedConnection;
         }
 
         // اتصال دستگاه
@@ -54,6 +60,18 @@ namespace SafeDoc.UI
             deviceDateSelector.Value = DateTime.Now;
             txtDeviceTime.Text = DateTime.Now.ToString("HH:mm");
             txtDeviceTime.Validating += OnTimeControlValidating;
+        }
+
+        private void chkClearSavedAccessKey_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkClearSavedAccessKey.Checked == false)
+            {
+                return;
+            }
+
+            AccessKeyStorage.Clear();
+            chkClearSavedAccessKey.Enabled = false;
+            Status("کلید ورود ذخیره‌شده حذف شد.", true);
         }
 
         private void UpdateToggleButtons()
@@ -86,6 +104,12 @@ namespace SafeDoc.UI
         // 1
         private void FormMain_Shown(object sender, EventArgs e)
         {
+            if (_connection != null && _connection.IsConnected)
+            {
+                UseVerifiedConnection();
+                return;
+            }
+
             ConnectApprovedDevice();
         }
 
@@ -193,6 +217,41 @@ namespace SafeDoc.UI
                 CloseConnection();
                 _connectedApprovedPort = string.Empty;
                 Status("اتصال برقرار نشد: " + ex.Message, false);
+            }
+            finally
+            {
+                _isConnecting = false;
+            }
+        }
+
+        private void UseVerifiedConnection()
+        {
+            if (_isConnecting)
+            {
+                return;
+            }
+
+            _isConnecting = true;
+            try
+            {
+                BeginOperationLoading("در حال آماده‌سازی دستگاه...");
+                _operations = new SafeDocOperations(_connection);
+                _connectedApprovedPort = _connection.PortName;
+                _approvedDeviceWasPresent = true;
+                _enterStatusIsKnown = false;
+                _hidStatusIsKnown = false;
+                UpdateToggleButtons();
+                SetConnected(false);
+                Status("توکن دستگاه تأیید شد.", true);
+                ReadDeviceSettings();
+                ReadUsersFromDevice();
+                SetConnected(true);
+            }
+            catch (Exception exception)
+            {
+                CloseConnection();
+                _connectedApprovedPort = string.Empty;
+                Status("آماده‌سازی دستگاه انجام نشد: " + exception.Message, false);
             }
             finally
             {

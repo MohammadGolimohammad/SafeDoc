@@ -10,6 +10,7 @@ namespace SafeDoc.UI
         private bool _isEnglish;
         private bool _isLoginLoading;
         private string _accessToken;
+        private DeviceConnectionService _verifiedConnection;
 
         public FormLogin()
         {
@@ -19,6 +20,8 @@ namespace SafeDoc.UI
         private void FormLogin_Load(object sender, EventArgs e)
         {
             AppSettings.CurrentLanguage = AppLanguage.Persian;
+            txtAccessKey.Text = AccessKeyStorage.Load();
+            chkRememberAccessKey.Checked = string.IsNullOrWhiteSpace(txtAccessKey.Text) == false;
         }
 
         private void ToggleLanguage()
@@ -69,7 +72,9 @@ namespace SafeDoc.UI
             loginLoadingTimer.Stop();
             Hide();
 
-            using (FormMain mainForm = new FormMain())
+            DeviceConnectionService verifiedConnection = _verifiedConnection;
+            _verifiedConnection = null;
+            using (FormMain mainForm = new FormMain(verifiedConnection))
             {
                 mainForm.ShowDialog();
             }
@@ -106,6 +111,8 @@ namespace SafeDoc.UI
                 SafeDocResponse response = operations.CheckToken(_accessToken);
                 if (response.isSuccess)
                 {
+                    _verifiedConnection = connection;
+                    connection = null;
                     return string.Empty;
                 }
 
@@ -176,6 +183,15 @@ namespace SafeDoc.UI
             {
                 StopLoginLoading(tokenError);
                 return;
+            }
+
+            if (chkRememberAccessKey.Checked)
+            {
+                AccessKeyStorage.Save(_accessToken);
+            }
+            else
+            {
+                AccessKeyStorage.Clear();
             }
 
             OpenMainForm();

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using SafeDoc.Models;
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace SafeDoc.Device
@@ -30,6 +31,14 @@ namespace SafeDoc.Device
             get
             {
                 return _serialPort.IsConnected;
+            }
+        }
+
+        public string PortName
+        {
+            get
+            {
+                return _serialPort.PortName;
             }
         }
 
@@ -146,6 +155,7 @@ namespace SafeDoc.Device
             {
                 _receivedText.Append(receivedPart);
                 string receivedJson = _receivedText.ToString().Trim('\0', ' ', '\r', '\n', '\t');
+                receivedJson = NormalizeSettingsResponse(receivedJson);
                 JObject responseObject;
                 try
                 {
@@ -164,6 +174,27 @@ namespace SafeDoc.Device
                 _completeResponseJson = responseObject.ToString();
                 _responseReady.Set();
             }
+        }
+
+        private static string NormalizeSettingsResponse(string receivedJson)
+        {
+            if (
+                receivedJson.IndexOf("\"time\"", StringComparison.OrdinalIgnoreCase) < 0
+                || receivedJson.IndexOf("\"date\"", StringComparison.OrdinalIgnoreCase) < 0
+                || receivedJson.IndexOf("\"enterStatus\"", StringComparison.OrdinalIgnoreCase) < 0
+            )
+            {
+                return receivedJson;
+            }
+
+            string normalizedJson = Regex.Replace(receivedJson, @"\[\s*\{\s*\{", "[{");
+            normalizedJson = Regex.Replace(
+                normalizedJson,
+                @"\}\s*,\s*\{\s*\""date\""\s*:",
+                ", \"date\":"
+            );
+
+            return normalizedJson;
         }
 
         private void OnSerialError(object sender, string errorMessage)
