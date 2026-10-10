@@ -132,15 +132,12 @@ namespace SafeDoc.Device
                     return;
                 }
 
-                if (
-                    responseObject.GetValue("isSuccess", StringComparison.OrdinalIgnoreCase) == null
-                    || responseObject.GetValue("responseStatusCode", StringComparison.OrdinalIgnoreCase) == null
-                )
+                if (responseObject["isSuccess"] == null || responseObject["responseStatusCode"] == null)
                 {
                     return;
                 }
 
-                _completeResponseJson = responseObject.ToString(Formatting.None);
+                _completeResponseJson = responseObject.ToString();
                 _responseReady.Set();
             }
         }

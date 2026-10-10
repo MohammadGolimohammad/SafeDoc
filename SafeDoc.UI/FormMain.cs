@@ -186,7 +186,7 @@ namespace SafeDoc.UI
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
-                await Task.Delay(DeviceReadyDelayMilliseconds);
+                //await Task.Delay(DeviceReadyDelayMilliseconds);
                 ReadDeviceSettings();
                 await Task.Delay(DeviceReadyDelayMilliseconds);
                 ReadUsersFromDevice();
@@ -1981,11 +1981,11 @@ namespace SafeDoc.UI
 
                 ShowCurrentDeviceDateTime(response);
                 UpdateToggleButtons();
-                Status("تنظیمات کامل دستگاه با یک درخواست خوانده شد.", true);
+                Status("تنظیمات دستگاه خوانده شد.", true);
             }
             catch (Exception exception)
             {
-                Status("خواندن تنظیمات کامل دستگاه انجام نشد: " + exception.Message, false);
+                Status("خواندن تنظیمات دستگاه انجام نشد: " + exception.Message, false);
             }
         }
 
