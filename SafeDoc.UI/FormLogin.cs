@@ -1,5 +1,8 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using SafeDoc.Business;
+using SafeDoc.Models;
 
 namespace SafeDoc.UI
 {
@@ -52,23 +55,84 @@ namespace SafeDoc.UI
 
         private void ContinueLoginLoading()
         {
-            int nextValue = loginProgressBar.Value + 20;
-            if (nextValue < 100)
+            int nextValue = loginProgressBar.Value + 5;
+            if (nextValue > 85)
             {
-                loginProgressBar.Value = nextValue;
-                return;
+                nextValue = 85;
             }
 
+            loginProgressBar.Value = nextValue;
+        }
+
+        private void OpenMainForm()
+        {
             loginProgressBar.Value = 100;
             loginLoadingTimer.Stop();
             Hide();
 
-            using (FormMain mainForm = new FormMain(_accessToken))
+            using (FormMain mainForm = new FormMain())
             {
                 mainForm.ShowDialog();
             }
 
             Close();
+        }
+
+        private void StopLoginLoading(string message)
+        {
+            loginLoadingTimer.Stop();
+            _isLoginLoading = false;
+            btnLogin.Enabled = true;
+            btnLanguage.Enabled = true;
+            loginProgressBar.Visible = false;
+            lblLoading.Text = message;
+            lblLoading.Visible = true;
+        }
+
+        private async Task<string> CheckDeviceTokenAsync()
+        {
+            return await Task.Run(CheckDeviceToken);
+        }
+
+        private string CheckDeviceToken()
+        {
+            string approvedPort = FormMain.FindApprovedDevicePort();
+            if (string.IsNullOrWhiteSpace(approvedPort))
+            {
+                return "دستگاه مورد نظر پیدا نشد.";
+            }
+
+            DeviceConnectionService connection = null;
+            try
+            {
+                connection = new DeviceConnectionService(approvedPort, 115200);
+                connection.Connect();
+
+                SafeDocOperations operations = new SafeDocOperations(connection);
+                SafeDocResponse response = operations.CheckToken(_accessToken);
+                if (response.isSuccess)
+                {
+                    return string.Empty;
+                }
+
+                if (response.responseStatusCode == 4)
+                {
+                    return "توکن دستگاه نادرست است.";
+                }
+
+                return "بررسی توکن ناموفق بود. " + response.responseStatusCode;
+            }
+            catch (Exception exception)
+            {
+                return "بررسی توکن انجام نشد: " + exception.Message;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Dispose();
+                }
+            }
         }
 
         private void ApplyEnglishText()
@@ -102,7 +166,7 @@ namespace SafeDoc.UI
             ToggleLanguage();
         }
 
-        private void btnLogin_Click(object sender, EventArgs e)
+        private async void btnLogin_Click(object sender, EventArgs e)
         {
             _accessToken = txtAccessKey.Text.Trim();
             if (string.IsNullOrWhiteSpace(_accessToken))
@@ -113,6 +177,14 @@ namespace SafeDoc.UI
             }
 
             StartLoginLoading();
+            string tokenError = await CheckDeviceTokenAsync();
+            if (string.IsNullOrWhiteSpace(tokenError) == false)
+            {
+                StopLoginLoading(tokenError);
+                return;
+            }
+
+            OpenMainForm();
         }
 
         private void loginLoadingTimer_Tick(object sender, EventArgs e)

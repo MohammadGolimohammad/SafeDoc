@@ -37,7 +37,6 @@ namespace SafeDoc.UI
         private DateTime? _deviceClockAtRead;
         private DateTime _deviceClockLocalReadAt;
         private bool _isFilteringFingerprintPassword;
-        private readonly string _accessToken;
 
         private const string ApprovedVendorId = "VID_CAFE";
         private const string ApprovedProductId = "PID_4014";
@@ -46,14 +45,8 @@ namespace SafeDoc.UI
         private const int DefaultUsbUseCount = 1;
 
         public FormMain()
-            : this(string.Empty)
-        {
-        }
-
-        public FormMain(string accessToken)
         {
             InitializeComponent();
-            _accessToken = accessToken ?? string.Empty;
         }
 
         // اتصال دستگاه
@@ -193,15 +186,6 @@ namespace SafeDoc.UI
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
-
-                bool tokenIsValid = await CheckDeviceTokenAsync();
-                if (tokenIsValid == false)
-                {
-                    CloseConnection();
-                    SetConnected(false);
-                    return;
-                }
-
                 await Task.Delay(DeviceReadyDelayMilliseconds);
                 await ReadDeviceSettingsAsync();
                 await Task.Delay(DeviceReadyDelayMilliseconds);
@@ -220,7 +204,7 @@ namespace SafeDoc.UI
             }
         }
 
-        private string FindApprovedDevicePort()
+        internal static string FindApprovedDevicePort()
         { // chat gpt 
             try
             {
@@ -1774,38 +1758,6 @@ namespace SafeDoc.UI
         private SafeDocResponse ReadSettingsFromDevice()
         {
             return _operations.GetAllSettings(out _lastDeviceSettings);
-        }
-
-        private async Task<bool> CheckDeviceTokenAsync()
-        {
-            if (string.IsNullOrWhiteSpace(_accessToken))
-            {
-                Status("کلید ورود برای بررسی توکن وارد نشده است.", false);
-                return false;
-            }
-
-            try
-            {
-                SafeDocResponse response = await Task.Run(CheckDeviceToken);
-                if (response.isSuccess)
-                {
-                    Status("توکن دستگاه تأیید شد.", true);
-                    return true;
-                }
-
-                Status("توکن دستگاه نادرست است.", false);
-                return false;
-            }
-            catch (Exception exception)
-            {
-                Status("بررسی توکن دستگاه انجام نشد: " + exception.Message, false);
-                return false;
-            }
-        }
-
-        private SafeDocResponse CheckDeviceToken()
-        {
-            return _operations.CheckToken(_accessToken);
         }
 
         private void CloseConnection()
