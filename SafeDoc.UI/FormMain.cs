@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SafeDoc.Business;
 using SafeDoc.Models;
@@ -85,12 +84,12 @@ namespace SafeDoc.UI
             button.BackColor = enabled? Color.FromArgb(22, 101, 52) : Color.FromArgb(153, 27, 27);
         }
         // 1
-        private async void FormMain_Shown(object sender, EventArgs e)
+        private void FormMain_Shown(object sender, EventArgs e)
         {
-            await ConnectApprovedDeviceAsync();
+            ConnectApprovedDevice();
         }
 
-        private async void connectionWatchTimer_Tick(object sender, EventArgs e)
+        private void connectionWatchTimer_Tick(object sender, EventArgs e)
         {
             if (_isConnecting)
             {
@@ -115,7 +114,7 @@ namespace SafeDoc.UI
             _approvedDeviceWasPresent = true;
             if (_connection == null || _connection.IsConnected == false)
             {
-                await ConnectApprovedDeviceAsync(approvedPort);
+                ConnectApprovedDevice(approvedPort);
                 return;
             }
 
@@ -124,11 +123,11 @@ namespace SafeDoc.UI
                 CloseConnection();
                 SetConnected(false);
                 Status("پورت دستگاه تغییر کرد؛ اتصال دوباره برقرار می‌شود.", false);
-                await ConnectApprovedDeviceAsync(approvedPort);
+                ConnectApprovedDevice(approvedPort);
             }
         }
 
-        private async Task ConnectApprovedDeviceAsync()
+        private void ConnectApprovedDevice()
         {
             string approvedPort = DevicePortFinder.FindApprovedDevicePort();
             if (string.IsNullOrEmpty(approvedPort))
@@ -139,9 +138,10 @@ namespace SafeDoc.UI
                 return;
             }
 
-            await ConnectApprovedDeviceAsync(approvedPort);
+            ConnectApprovedDevice(approvedPort);
         }
-        private async Task ConnectApprovedDeviceAsync(string approvedPort)
+
+        private void ConnectApprovedDevice(string approvedPort)
         {
             if (_isConnecting)
             {
@@ -160,7 +160,7 @@ namespace SafeDoc.UI
                 _connection = newConnection;
                 newConnection.Connect();
 
-                await Task.Delay(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceReadyDelayMilliseconds);
 
                 if (ReferenceEquals(_connection, newConnection) == false)
                 {
@@ -182,9 +182,9 @@ namespace SafeDoc.UI
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                await ReadDeviceSettingsAsync();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceReadyDelayMilliseconds);
+                ReadDeviceSettings();
+                Thread.Sleep(DeviceReadyDelayMilliseconds);
                 ReadUsersFromDevice();
                 SetConnected(true);
             }
@@ -1108,7 +1108,7 @@ namespace SafeDoc.UI
                 {
                     return;
                 }
-                Task.Delay(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceReadyDelayMilliseconds);
                 SafeDocResponse response = _operations.DeleteFingerprint(selectedUser.UserId.ToString());
                 ShowDeviceResponse(response);
                 if (response.isSuccess)
@@ -1303,7 +1303,7 @@ namespace SafeDoc.UI
 
                 if (response.isSuccess)
                 {
-                    Task.Delay(DeviceReadyDelayMilliseconds);
+                    Thread.Sleep(DeviceReadyDelayMilliseconds);
                     ReadCurrentDeviceDateTime();
                 }
             }
@@ -1647,11 +1647,11 @@ namespace SafeDoc.UI
             SaveHidStatus();
         }
 
-        private async Task ReadDeviceSettingsAsync()
+        private void ReadDeviceSettings()
         {
             try
             {
-                SafeDocResponse response = await Task.Run(ReadSettingsFromDevice);
+                SafeDocResponse response = ReadSettingsFromDevice();
                 SafeDocDeviceSettings settings = _lastDeviceSettings;
                 ShowDeviceResponse(response, false, false);
                 if (response == null || response.isSuccess == false)

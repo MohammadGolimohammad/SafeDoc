@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SafeDoc.Business;
 using SafeDoc.Models;
@@ -89,11 +88,6 @@ namespace SafeDoc.UI
             lblLoading.Visible = true;
         }
 
-        private async Task<string> CheckDeviceTokenAsync()
-        {
-            return await Task.Run(CheckDeviceToken);
-        }
-
         private string CheckDeviceToken()
         {
             string approvedPort = DevicePortFinder.FindApprovedDevicePort();
@@ -166,7 +160,7 @@ namespace SafeDoc.UI
             ToggleLanguage();
         }
 
-        private async void btnLogin_Click(object sender, EventArgs e)
+        private void btnLogin_Click(object sender, EventArgs e)
         {
             _accessToken = txtAccessKey.Text.Trim();
             if (string.IsNullOrWhiteSpace(_accessToken))
@@ -177,7 +171,7 @@ namespace SafeDoc.UI
             }
 
             StartLoginLoading();
-            string tokenError = await CheckDeviceTokenAsync();
+            string tokenError = CheckDeviceToken();
             if (string.IsNullOrWhiteSpace(tokenError) == false)
             {
                 StopLoginLoading(tokenError);
