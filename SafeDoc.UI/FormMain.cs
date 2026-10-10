@@ -395,17 +395,22 @@ namespace SafeDoc.UI
 
             if (code == 1)
             {
-                return "شناسه داخلی تکراری است";
+                return "شناسه کاربر تکراری است";
             }
 
             if (code == 2)
             {
-                return "اثر انگشت ثبت‌ شده پیدا نشد";
+                return "شناسه کاربر در دستگاه پیدا نشد";
             }
 
             if (code == 3)
             {
                 return "زمان ثبت اثرانگشت تمام شد";
+            }
+
+            if (code == 4)
+            {
+                return "خطای دستگاه";
             }
 
             if (code == 7)
@@ -418,6 +423,11 @@ namespace SafeDoc.UI
                 return "نام رمز پیدا نشد";
             }
 
+            if (code == 9)
+            {
+                return "شناسه واردشده با اثر انگشت دستگاه مطابقت ندارد";
+            }
+
             if (code == 10)
             {
                 return "زمان انقضا ثبت نشده است";
@@ -428,7 +438,7 @@ namespace SafeDoc.UI
                 return "رمزی ثبت نشده است";
             }
 
-            return "کد اختصاصی دستگاه";
+            return "کد ناشناخته دستگاه: " + code;
         }
 
         private bool Ready()
@@ -1783,7 +1793,7 @@ namespace SafeDoc.UI
                     return true;
                 }
 
-                Status("توکن دستگاه نادرست است. کد پاسخ: " + response.responseStatusCode, false);
+                Status("توکن دستگاه نادرست است.", false);
                 return false;
             }
             catch (Exception exception)
