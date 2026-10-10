@@ -9,6 +9,9 @@ namespace SafeDoc.Device
 {
     public sealed class SafeDocClient : IDisposable
     {
+        private const string CommandPrefix = "a[";
+        private const string CommandSuffix = "]";
+
         private readonly SerialPortManager _serialPort;
         private readonly object _sendLock = new object();
         private readonly object _responseLock = new object();
@@ -59,14 +62,24 @@ namespace SafeDoc.Device
                 PrepareForNextResponse();
 
                 string commandJson = JsonConvert.SerializeObject(command);
-                CommandSent?.Invoke(this, commandJson);
-                _serialPort.Send(commandJson);
+                string commandFrame = CommandPrefix + commandJson + CommandSuffix;
+                _serialPort.ClearReceivedData();
+                CommandSent?.Invoke(this, commandFrame);
+                _serialPort.Send(commandFrame);
 
                 WaitForDeviceResponse(timeoutMilliseconds);
 
                 lock (_responseLock)
                 {
-                    return JsonConvert.DeserializeObject<SafeDocResponse>(_completeResponseJson);
+                    SafeDocResponse response = JsonConvert.DeserializeObject<SafeDocResponse>(
+                        _completeResponseJson
+                    );
+                    if (response == null)
+                    {
+                        throw new InvalidOperationException("پاسخ دستگاه به مدل پاسخ قابل تبدیل نیست.");
+                    }
+
+                    return response;
                 }
             }
         }

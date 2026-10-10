@@ -93,6 +93,16 @@ namespace SafeDoc.Device
             _serialPort.Write(data);
         }
 
+        public void ClearReceivedData()
+        {
+            if (IsConnected == false)
+            {
+                return;
+            }
+
+            _serialPort.DiscardInBuffer();
+        }
+
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             try
