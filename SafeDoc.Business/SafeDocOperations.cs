@@ -185,6 +185,16 @@ namespace SafeDoc.Business
             return response;
         }
 
+        public SafeDocResponse CheckToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                throw new ArgumentException("توکن نمی‌تواند خالی باشد.", nameof(token));
+            }
+
+            return Send(SafeDocCommandType.CheckToken, new { token = token.Trim() });
+        }
+
         public SafeDocResponse SetEnterStatus(bool enabled)
         {
             return Send(SafeDocCommandType.SetEnterStatusInHID, new { enterStatus = enabled });
