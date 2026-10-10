@@ -80,6 +80,11 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetTimeDate);
         }
 
+        public SafeDocResponse GetDeviceDateTime(out SafeDocDeviceSettings settings)
+        {
+            return GetAllSettings(out settings);
+        }
+
         public SafeDocResponse GetPasswordNames(string userId)
         {
             return Send(SafeDocCommandType.GetAllPassName, User(userId));
@@ -136,6 +141,13 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetAllUsers);
         }
 
+        public SafeDocResponse GetAllUsers(out List<SafeDocDeviceUser> users)
+        {
+            SafeDocResponse response = GetAllUsers();
+            users = _connection.ReadResponseList<SafeDocDeviceUser>(response);
+            return response;
+        }
+
         public SafeDocResponse GetUser(string userId)
         {
             return Send(SafeDocCommandType.GetUser, User(userId));
@@ -164,6 +176,13 @@ namespace SafeDoc.Business
         public SafeDocResponse GetAllSettings()
         {
             return Send(SafeDocCommandType.GetAllSettings);
+        }
+
+        public SafeDocResponse GetAllSettings(out SafeDocDeviceSettings settings)
+        {
+            SafeDocResponse response = GetAllSettings();
+            settings = _connection.ReadResponseData<SafeDocDeviceSettings>(response);
+            return response;
         }
 
         public SafeDocResponse SetEnterStatus(bool enabled)

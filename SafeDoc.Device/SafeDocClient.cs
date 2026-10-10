@@ -80,6 +80,30 @@ namespace SafeDoc.Device
             }
         }
 
+        public T ReadResponseData<T>(SafeDocResponse response)
+            where T : class, new()
+        {
+            if (response == null || response.resultData == null || response.resultData.Count == 0)
+            {
+                return new T();
+            }
+
+            string dataJson = JsonConvert.SerializeObject(response.resultData[0]);
+            return JsonConvert.DeserializeObject<T>(dataJson) ?? new T();
+        }
+
+        public System.Collections.Generic.List<T> ReadResponseList<T>(SafeDocResponse response)
+        {
+            if (response == null || response.resultData == null)
+            {
+                return new System.Collections.Generic.List<T>();
+            }
+
+            string dataJson = JsonConvert.SerializeObject(response.resultData);
+            return JsonConvert.DeserializeObject<System.Collections.Generic.List<T>>(dataJson)
+                ?? new System.Collections.Generic.List<T>();
+        }
+
         private void PrepareForNextResponse()
         {
             lock (_responseLock)

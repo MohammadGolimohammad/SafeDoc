@@ -38,6 +38,17 @@ namespace SafeDoc.Business
             return _client.SendCommand(command, timeoutMilliseconds);
         }
 
+        public T ReadResponseData<T>(SafeDocResponse response)
+            where T : class, new()
+        {
+            return _client.ReadResponseData<T>(response);
+        }
+
+        public System.Collections.Generic.List<T> ReadResponseList<T>(SafeDocResponse response)
+        {
+            return _client.ReadResponseList<T>(response);
+        }
+
         private void OnDataReceived(object sender, string data)
         {
             RawDataReceived?.Invoke(this, data);
