@@ -9,9 +9,6 @@ namespace SafeDoc.Device
 {
     public sealed class SafeDocClient : IDisposable
     {
-        private const string CommandPrefix = "a[";
-        private const string CommandSuffix = "]";
-
         private readonly SerialPortManager _serialPort;
         private readonly object _sendLock = new object();
         private readonly object _responseLock = new object();
@@ -62,10 +59,9 @@ namespace SafeDoc.Device
                 PrepareForNextResponse();
 
                 string commandJson = JsonConvert.SerializeObject(command);
-                string commandFrame = CommandPrefix + commandJson + CommandSuffix;
                 _serialPort.ClearReceivedData();
-                CommandSent?.Invoke(this, commandFrame);
-                _serialPort.Send(commandFrame);
+                CommandSent?.Invoke(this, commandJson);
+                _serialPort.Send(commandJson);
 
                 WaitForDeviceResponse(timeoutMilliseconds);
 
