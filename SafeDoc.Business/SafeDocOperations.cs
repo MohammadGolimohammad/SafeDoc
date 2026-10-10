@@ -164,6 +164,19 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetUser, User(userId));
         }
 
+        public SafeDocResponse GetFingerprintUserId()
+        {
+            return Send(SafeDocCommandType.GetUserId);
+        }
+
+        public SafeDocResponse GetFingerprintUserId(out int userId)
+        {
+            SafeDocResponse response = GetFingerprintUserId();
+            SafeDocDeviceUser user = _connection.ReadResponseData<SafeDocDeviceUser>(response);
+            userId = user.UserId;
+            return response;
+        }
+
         public SafeDocResponse SavePerson(
             string userId,
             string userName,
@@ -274,7 +287,10 @@ namespace SafeDoc.Business
             command.commandType = type;
             command.requiredData = new List<object>(data);
 
-            if (type == SafeDocCommandType.FingerEnroll)
+            if (
+                type == SafeDocCommandType.FingerEnroll
+                || type == SafeDocCommandType.GetUserId
+            )
             {
                 timeoutMilliseconds = _fingerprintEnrollTimeoutMilliseconds;
             }

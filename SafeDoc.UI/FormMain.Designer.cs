@@ -20,7 +20,7 @@ namespace SafeDoc.UI
         private System.Windows.Forms.TextBox txtFingerprintUserId, txtFingerprintPasswordName, txtFingerprintPassword, txtPasswordUserId, txtPasswordName, txtPasswordValue, txtUsbTimeout;
         private System.Windows.Forms.MaskedTextBox txtDeviceTime, txtExpirationTime;
         private Atf.UI.DateTimeSelector deviceDateSelector, expirationDateSelector;
-        private System.Windows.Forms.Button btnEnrollFingerprint, btnCancelUser, btnDeleteAllFingerprints, btnAddPassword, btnDeletePassword, btnDeleteAllPasswords, btnShowPasswords, btnSetDateTime, btnSetExpiration, btnGetExpiration, btnSetUsb;
+        private System.Windows.Forms.Button btnEnrollFingerprint, btnCancelUser, btnIdentifyFingerprint, btnDeleteAllFingerprints, btnAddPassword, btnDeletePassword, btnDeleteAllPasswords, btnShowPasswords, btnSetDateTime, btnSetExpiration, btnGetExpiration, btnSetUsb;
         private System.Windows.Forms.Button btnEnterStatusToggle, btnHidAfterExpirationToggle, btnBuzzerStatusToggle;
         private System.Windows.Forms.Button btnToggleFingerprintPassword;
         private System.Windows.Forms.Panel pnlPasswordStrengthWeak, pnlPasswordStrengthMedium, pnlPasswordStrengthStrong;
@@ -66,6 +66,7 @@ namespace SafeDoc.UI
             this.expirationDateSelector = new Atf.UI.DateTimeSelector();
             this.txtExpirationTime = new System.Windows.Forms.MaskedTextBox();
             this.btnEnrollFingerprint = new System.Windows.Forms.Button();
+            this.btnIdentifyFingerprint = new System.Windows.Forms.Button();
             this.groupSettings = new System.Windows.Forms.GroupBox();
             this.date = new System.Windows.Forms.Label();
             this.usb = new System.Windows.Forms.Label();
@@ -236,6 +237,7 @@ namespace SafeDoc.UI
             this.groupFingerprint.Controls.Add(this.expirationDateSelector);
             this.groupFingerprint.Controls.Add(this.txtExpirationTime);
             this.groupFingerprint.Controls.Add(this.btnEnrollFingerprint);
+            this.groupFingerprint.Controls.Add(this.btnIdentifyFingerprint);
             this.groupFingerprint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
             this.groupFingerprint.Location = new System.Drawing.Point(12, 69);
             this.groupFingerprint.Name = "groupFingerprint";
@@ -409,6 +411,20 @@ namespace SafeDoc.UI
             this.btnEnrollFingerprint.Text = "ذخیره";
             this.btnEnrollFingerprint.UseVisualStyleBackColor = false;
             this.btnEnrollFingerprint.Click += new System.EventHandler(this.btnEnrollFingerprint_Click);
+            // 
+            // btnIdentifyFingerprint
+            // 
+            this.btnIdentifyFingerprint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
+            this.btnIdentifyFingerprint.FlatAppearance.BorderSize = 0;
+            this.btnIdentifyFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnIdentifyFingerprint.ForeColor = System.Drawing.Color.White;
+            this.btnIdentifyFingerprint.Location = new System.Drawing.Point(264, 62);
+            this.btnIdentifyFingerprint.Name = "btnIdentifyFingerprint";
+            this.btnIdentifyFingerprint.Size = new System.Drawing.Size(96, 24);
+            this.btnIdentifyFingerprint.TabIndex = 14;
+            this.btnIdentifyFingerprint.Text = "شناسایی";
+            this.btnIdentifyFingerprint.UseVisualStyleBackColor = false;
+            this.btnIdentifyFingerprint.Click += new System.EventHandler(this.btnIdentifyFingerprint_Click);
             // 
             // groupSettings
             // 

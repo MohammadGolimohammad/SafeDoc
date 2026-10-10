@@ -698,6 +698,7 @@ namespace SafeDoc.UI
             chkFlashPermission.Enabled = canEditInputs;
             btnEnrollFingerprint.Enabled = canUseEditor;
             btnCancelUser.Enabled = canEditInputs;
+            btnIdentifyFingerprint.Enabled = canUseEditor;
             btnEnrollFingerprint.Text = _isEditMode
                 ? "ذخیره ویرایش"
                 : _isNewUserEntryMode ? "ذخیره کاربر جدید" : "ثبت کاربر جدید";
@@ -945,15 +946,11 @@ namespace SafeDoc.UI
 
             int userId;
             bool isEditing = _isEditMode && _selectedUser != null && _selectedUser.UserId.HasValue;
+            SafeDocUserRow user;
             if (isEditing)
             {
                 userId = _selectedUser.UserId.Value;
-                _selectedUser.UserName = passName;
-                _selectedUser.Pass = pass;
-                _selectedUser.ExpireDate = GetSelectedExpirationDate();
-                _selectedUser.ExpireTime = NormalizeDigits(txtExpirationTime.Text);
-                _selectedUser.FlashPermission = chkFlashPermission.Checked;
-                _selectedUser.UsbUseCount = GetUsbUseCountForSave(_selectedUser);
+                user = _selectedUser;
             }
             else
             {
@@ -964,28 +961,22 @@ namespace SafeDoc.UI
                     return;
                 }
 
-                _deviceUsers.Add(
-                    new SafeDocUserRow
-                    {
-                        UserId = userId,
-                        UserName = passName,
-                        Pass = pass,
-                        ExpireDate = GetSelectedExpirationDate(),
-                        ExpireTime = NormalizeDigits(txtExpirationTime.Text),
-                        FingerprintStatus = "ثبت نشده",
-                        FlashPermission = chkFlashPermission.Checked,
-                        UsbUseCount = chkFlashPermission.Checked
-                            ? DeviceConfiguration.DefaultUsbUseCount
-                            : 0
-                    }
-                );
+                user = new SafeDocUserRow();
+                user.UserId = userId;
+                user.FingerprintStatus = "ثبت نشده";
+                _deviceUsers.Add(user);
             }
 
-            SaveFlashPermissionUserIds();
-            dgvUsers.Refresh();
-            ApplyFingerprintRowColors();
-            CancelUserOperation();
-            Status(isEditing ? "ویرایش کاربر در گرید ذخیره شد." : "کاربر جدید در گرید ذخیره شد.", true);
+            user.UserName = passName;
+            user.Pass = pass;
+            user.ExpireDate = GetSelectedExpirationDate();
+            user.ExpireTime = NormalizeDigits(txtExpirationTime.Text);
+            user.FlashPermission = chkFlashPermission.Checked;
+            user.UsbUseCount = chkFlashPermission.Checked
+                ? GetUsbUseCountForSave(user)
+                : 0;
+
+            RegisterFingerprint(user);
         }
 
         private int GetUsbUseCountForSave(SafeDocUserRow user)
@@ -1039,15 +1030,6 @@ namespace SafeDoc.UI
             {
                 if (user.FingerprintStatus == "ثبت شده")
                 {
-                    SafeDocResponse deletePasswordsResponse = _operations.DeleteAllPasswords(
-                        user.UserId.Value.ToString()
-                    );
-                    ShowDeviceResponse(deletePasswordsResponse, true, false);
-                    if (deletePasswordsResponse.isSuccess == false)
-                    {
-                        EndOperationLoading();
-                        return;
-                    }
                     SafeDocResponse deleteFingerprintResponse = _operations.DeleteFingerprint(
                         user.UserId.Value.ToString()
                     );
@@ -1083,15 +1065,59 @@ namespace SafeDoc.UI
                 }
 
                 user.FingerprintStatus = "ثبت شده";
+                SaveFlashPermissionUserIds();
                 dgvUsers.Refresh();
                 ApplyFingerprintRowColors();
+                CancelUserOperation();
                 EndOperationLoading();
-                Status("اثر انگشت ثبت شد و اطلاعات کامل کاربر با یک درخواست ذخیره شد.", true);
+                Status("اثر انگشت ثبت شد و مشخصات کامل کاربر ذخیره شد.", true);
             }
             catch (Exception exception)
             {
                 EndOperationLoading();
                 Status("ثبت اثر انگشت انجام نشد: " + exception.Message, false);
+            }
+        }
+
+        private void IdentifyFingerprintUser()
+        {
+            if (Ready() == false)
+            {
+                return;
+            }
+
+            try
+            {
+                Status("انگشت کاربر را روی دستگاه قرار دهید.", true);
+                int userId;
+                SafeDocResponse response = _operations.GetFingerprintUserId(out userId);
+                ShowDeviceResponse(response);
+                if (response.isSuccess == false)
+                {
+                    return;
+                }
+
+                for (int rowIndex = 0; rowIndex < dgvUsers.Rows.Count; rowIndex++)
+                {
+                    SafeDocUserRow user = dgvUsers.Rows[rowIndex].DataBoundItem as SafeDocUserRow;
+                    if (user == null || user.UserId.HasValue == false)
+                    {
+                        continue;
+                    }
+
+                    if (user.UserId.Value == userId)
+                    {
+                        BeginEditSelectedUser(rowIndex);
+                        Status("اطلاعات کاربر " + user.UserName + " در فرم نمایش داده شد.", true);
+                        return;
+                    }
+                }
+
+                Status("اثر انگشت شناسایی شد، اما اطلاعات این کاربر در گرید نیست.", false);
+            }
+            catch (Exception exception)
+            {
+                Status("شناسایی اثر انگشت انجام نشد: " + exception.Message, false);
             }
         }
 
@@ -1794,6 +1820,11 @@ namespace SafeDoc.UI
             }
 
             StartNewUserRegistration();
+        }
+
+        private void btnIdentifyFingerprint_Click(object sender, EventArgs e)
+        {
+            IdentifyFingerprintUser();
         }
 
         // 8
