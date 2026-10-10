@@ -111,6 +111,8 @@ namespace SafeDoc.UI
             this.ColumnExpireDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnExpireTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnFlashPermission = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.ColumnUsbUseCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnUsbUsedTimes = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnEdit = new System.Windows.Forms.DataGridViewButtonColumn();
             this.ColumnDelete = new System.Windows.Forms.DataGridViewButtonColumn();
             this.ColumnFingerprint = new System.Windows.Forms.DataGridViewButtonColumn();
@@ -625,6 +627,8 @@ namespace SafeDoc.UI
             this.ColumnExpireDate,
             this.ColumnExpireTime,
             this.ColumnFlashPermission,
+            this.ColumnUsbUseCount,
+            this.ColumnUsbUsedTimes,
             this.ColumnEdit,
             this.ColumnDelete,
             this.ColumnFingerprint,
@@ -986,6 +990,22 @@ namespace SafeDoc.UI
             this.ColumnFlashPermission.Name = "ColumnFlashPermission";
             this.ColumnFlashPermission.ReadOnly = true;
             // 
+            // ColumnUsbUseCount
+            // 
+            this.ColumnUsbUseCount.DataPropertyName = "UsbUseCount";
+            this.ColumnUsbUseCount.FillWeight = 75F;
+            this.ColumnUsbUseCount.HeaderText = "تعداد مجاز USB";
+            this.ColumnUsbUseCount.Name = "ColumnUsbUseCount";
+            this.ColumnUsbUseCount.ReadOnly = true;
+            // 
+            // ColumnUsbUsedTimes
+            // 
+            this.ColumnUsbUsedTimes.DataPropertyName = "UsbUsedTimes";
+            this.ColumnUsbUsedTimes.FillWeight = 75F;
+            this.ColumnUsbUsedTimes.HeaderText = "دفعات استفاده USB";
+            this.ColumnUsbUsedTimes.Name = "ColumnUsbUsedTimes";
+            this.ColumnUsbUsedTimes.ReadOnly = true;
+            // 
             // ColumnEdit
             // 
             this.ColumnEdit.FillWeight = 89.65736F;
@@ -1081,6 +1101,8 @@ namespace SafeDoc.UI
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnExpireDate;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnExpireTime;
         private System.Windows.Forms.DataGridViewCheckBoxColumn ColumnFlashPermission;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnUsbUseCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnUsbUsedTimes;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnEdit;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnDelete;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnFingerprint;
