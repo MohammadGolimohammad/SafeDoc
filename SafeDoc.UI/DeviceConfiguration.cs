@@ -5,21 +5,8 @@ namespace SafeDoc.UI
 {
     internal static class DeviceConfiguration
     {
-        internal static string ApprovedVendorId
-        {
-            get
-            {
-                return ReadText("ApprovedVendorId");
-            }
-        }
-
-        internal static string ApprovedProductId
-        {
-            get
-            {
-                return ReadText("ApprovedProductId");
-            }
-        }
+        internal const string ApprovedVendorId = "VID_CAFE";
+        internal const string ApprovedProductId = "PID_4014";
 
         internal static int BaudRate
         {
