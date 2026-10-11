@@ -1191,6 +1191,30 @@ namespace SafeDoc.UI
             {
                 if (user.FingerprintStatus == "ثبت شده")
                 {
+                    Status("در حال پاک‌کردن رمزهای قبلی کاربر " + user.UserId + "...", true);
+                    SafeDocResponse deletePasswordsResponse = _operations.DeleteAllPasswords(
+                        user.UserId.Value.ToString()
+                    );
+                    if (
+                        deletePasswordsResponse.isSuccess == false
+                        && deletePasswordsResponse.responseStatusCode != 11
+                    )
+                    {
+                        ShowDeviceResponse(deletePasswordsResponse, true, false);
+                        EndOperationLoading();
+                        return;
+                    }
+
+                    if (deletePasswordsResponse.isSuccess)
+                    {
+                        ShowDeviceResponse(deletePasswordsResponse, true, false);
+                    }
+                    else
+                    {
+                        Status("رمز قبلی برای این کاربر وجود نداشت؛ ادامهٔ ویرایش انجام می‌شود.", true);
+                    }
+
+                    Status("در حال پاک‌کردن اثرانگشت قبلی کاربر " + user.UserId + "...", true);
                     SafeDocResponse deleteFingerprintResponse = _operations.DeleteFingerprint(
                         user.UserId.Value.ToString()
                     );
