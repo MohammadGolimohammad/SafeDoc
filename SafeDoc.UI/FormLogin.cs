@@ -93,6 +93,19 @@ namespace SafeDoc.UI
             lblLoading.Visible = true;
         }
 
+        private void ShowLoginMessage(string message)
+        {
+            MessageBox.Show(
+                "⚠ ورود به دستگاه انجام نشد."
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + message,
+                "بررسی ورود",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
+        }
+
         private string CheckDeviceToken()
         {
             string approvedPort = DevicePortFinder.FindApprovedDevicePort();
@@ -180,6 +193,7 @@ namespace SafeDoc.UI
             {
                 lblLoading.Text = "کلید ورود را وارد کنید.";
                 lblLoading.Visible = true;
+                ShowLoginMessage("کلید ورود یا رمز دستگاه را وارد کنید.");
                 return;
             }
 
@@ -188,6 +202,7 @@ namespace SafeDoc.UI
             if (string.IsNullOrWhiteSpace(tokenError) == false)
             {
                 StopLoginLoading(tokenError);
+                ShowLoginMessage(tokenError);
                 return;
             }
 
