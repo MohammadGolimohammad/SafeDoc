@@ -3,14 +3,10 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.IO.Ports;
-using System.Management;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SafeDoc.Business;
 using SafeDoc.Models;
-using Newtonsoft.Json.Linq;
 
 namespace SafeDoc.UI
 {
@@ -23,8 +19,10 @@ namespace SafeDoc.UI
         private bool _approvedDeviceWasPresent;
         private bool _sendEnterAfterPassword;
         private bool _keepHidAfterExpiration;
+        private bool _buzzerStatus;
         private bool _enterStatusIsKnown;
         private bool _hidStatusIsKnown;
+        private bool _buzzerStatusIsKnown;
         private bool _deviceIsConnected;
         private bool _operationInProgress;
         private bool _isConnecting;
@@ -34,18 +32,20 @@ namespace SafeDoc.UI
         private BindingList<SafeDocUserRow> _deviceUsers;
         private SafeDocUserRow _selectedUser;
         private SafeDocUserRow _visiblePasswordUser;
+        private SafeDocDeviceSettings _lastDeviceSettings;
         private DateTime? _deviceClockAtRead;
         private DateTime _deviceClockLocalReadAt;
         private bool _isFilteringFingerprintPassword;
 
-        private const string ApprovedVendorId = "VID_CAFE";
-        private const string ApprovedProductId = "PID_4014";
-        private const int ApprovedDeviceBaudRate = 115200;
-        private const int DeviceReadyDelayMilliseconds = 1000;
-
         public FormMain()
+            : this(null)
+        {
+        }
+
+        public FormMain(DeviceConnectionService verifiedConnection)
         {
             InitializeComponent();
+            _connection = verifiedConnection;
         }
 
         // اتصال دستگاه
@@ -58,6 +58,18 @@ namespace SafeDoc.UI
             deviceDateSelector.Value = DateTime.Now;
             txtDeviceTime.Text = DateTime.Now.ToString("HH:mm");
             txtDeviceTime.Validating += OnTimeControlValidating;
+        }
+
+        private void chkClearSavedAccessKey_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkClearSavedAccessKey.Checked == false)
+            {
+                return;
+            }
+
+            AccessKeyStorage.Clear();
+            chkClearSavedAccessKey.Enabled = false;
+            Status("کلید ورود ذخیره‌شده حذف شد.", true);
         }
 
         private void UpdateToggleButtons()
@@ -74,8 +86,14 @@ namespace SafeDoc.UI
                 _hidStatusIsKnown,
                 "فعال‌بودن HID پس از انقضا"
             );
+            UpdateToggleButton(
+                btnBuzzerStatusToggle,
+                _buzzerStatus,
+                _buzzerStatusIsKnown,
+                "صدای بازر"
+            );
         }
-        private static void UpdateToggleButton(Button button,bool enabled,bool statusIsKnown,string operationName)
+        private static void UpdateToggleButton(Button button, bool enabled, bool statusIsKnown, string operationName)
         {
             if (statusIsKnown == false)
             {
@@ -85,22 +103,28 @@ namespace SafeDoc.UI
             }
             string state = enabled ? "فعال" : "غیرفعال";
             button.Text = operationName + " (" + state + ")";
-            button.BackColor = enabled? Color.FromArgb(22, 101, 52) : Color.FromArgb(153, 27, 27);
+            button.BackColor = enabled ? Color.FromArgb(22, 101, 52) : Color.FromArgb(153, 27, 27);
         }
         // 1
-        private async void FormMain_Shown(object sender, EventArgs e)
+        private void FormMain_Shown(object sender, EventArgs e)
         {
-            await ConnectApprovedDeviceAsync();
+            if (_connection != null && _connection.IsConnected)
+            {
+                UseVerifiedConnection();
+                return;
+            }
+
+            ConnectApprovedDevice();
         }
 
-        private async void connectionWatchTimer_Tick(object sender, EventArgs e)
+        private void connectionWatchTimer_Tick(object sender, EventArgs e)
         {
             if (_isConnecting)
             {
                 return;
             }
 
-            string approvedPort = FindApprovedDevicePort();
+            string approvedPort = DevicePortFinder.FindApprovedDevicePort();
             if (string.IsNullOrEmpty(approvedPort))
             {
                 if (_connection != null || _approvedDeviceWasPresent)
@@ -118,7 +142,7 @@ namespace SafeDoc.UI
             _approvedDeviceWasPresent = true;
             if (_connection == null || _connection.IsConnected == false)
             {
-                await ConnectApprovedDeviceAsync(approvedPort);
+                ConnectApprovedDevice(approvedPort);
                 return;
             }
 
@@ -127,13 +151,13 @@ namespace SafeDoc.UI
                 CloseConnection();
                 SetConnected(false);
                 Status("پورت دستگاه تغییر کرد؛ اتصال دوباره برقرار می‌شود.", false);
-                await ConnectApprovedDeviceAsync(approvedPort);
+                ConnectApprovedDevice(approvedPort);
             }
         }
 
-        private async Task ConnectApprovedDeviceAsync()
+        private void ConnectApprovedDevice()
         {
-            string approvedPort = FindApprovedDevicePort();
+            string approvedPort = DevicePortFinder.FindApprovedDevicePort();
             if (string.IsNullOrEmpty(approvedPort))
             {
                 CloseConnection();
@@ -142,9 +166,10 @@ namespace SafeDoc.UI
                 return;
             }
 
-            await ConnectApprovedDeviceAsync(approvedPort);
+            ConnectApprovedDevice(approvedPort);
         }
-        private async Task ConnectApprovedDeviceAsync(string approvedPort)
+
+        private void ConnectApprovedDevice(string approvedPort)
         {
             if (_isConnecting)
             {
@@ -158,12 +183,15 @@ namespace SafeDoc.UI
                 CloseConnection();
                 DeviceConnectionService newConnection = new DeviceConnectionService(
                     approvedPort,
-                    ApprovedDeviceBaudRate
+                    DeviceConfiguration.BaudRate
                 );
                 _connection = newConnection;
+                newConnection.CommandSent += DeviceCommandSent;
+                newConnection.RawDataReceived += DeviceResponseReceived;
+                newConnection.ErrorOccurred += DeviceCommunicationError;
                 newConnection.Connect();
 
-                await Task.Delay(DeviceReadyDelayMilliseconds);
+                Thread.Sleep(DeviceConfiguration.DeviceReadyDelayMilliseconds);
 
                 if (ReferenceEquals(_connection, newConnection) == false)
                 {
@@ -177,25 +205,17 @@ namespace SafeDoc.UI
                     return;
                 }
 
-                _operations = new SafeDocOperations(newConnection);
+                _operations = CreateOperations(newConnection);
                 _connectedApprovedPort = approvedPort;
                 _approvedDeviceWasPresent = true;
                 _enterStatusIsKnown = false;
                 _hidStatusIsKnown = false;
+                _buzzerStatusIsKnown = false;
                 UpdateToggleButtons();
                 SetConnected(false);
                 Status("دستگاه با موفقیت متصل شد.", true);
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadEnterStatusFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadHidStatusFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadUsbTimeoutFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
-                ReadCurrentDeviceDateTime();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
+                ReadDeviceSettings();
                 ReadUsersFromDevice();
-                await Task.Delay(DeviceReadyDelayMilliseconds);
                 SetConnected(true);
             }
             catch (Exception ex)
@@ -210,99 +230,54 @@ namespace SafeDoc.UI
             }
         }
 
-        private string FindApprovedDevicePort()
-        { // chat gpt 
+        private void UseVerifiedConnection()
+        {
+            if (_isConnecting)
+            {
+                return;
+            }
+
+            _isConnecting = true;
             try
             {
-                using (
-                    ManagementObjectSearcher serialPortSearcher = new ManagementObjectSearcher(
-                        "SELECT DeviceID, PNPDeviceID FROM Win32_SerialPort"
-                    )
-                )
-                {
-                    foreach (ManagementObject serialPort in serialPortSearcher.Get())
-                    {
-                        string deviceId = Convert.ToString(serialPort["DeviceID"]);
-                        string pnpDeviceId = Convert.ToString(serialPort["PNPDeviceID"]);
-                        if (IsApprovedDevice(pnpDeviceId) && IsAvailableSerialPort(deviceId))
-                        {
-                            return deviceId;
-                        }
-                    }
-                }
-
-                using (
-                    ManagementObjectSearcher plugAndPlaySearcher = new ManagementObjectSearcher(
-                        "SELECT Name, PNPDeviceID FROM Win32_PnPEntity"
-                    )
-                )
-                {
-                    foreach (ManagementObject device in plugAndPlaySearcher.Get())
-                    {
-                        string deviceName = Convert.ToString(device["Name"]);
-                        string pnpDeviceId = Convert.ToString(device["PNPDeviceID"]);
-                        if (IsApprovedDevice(pnpDeviceId) == false)
-                        {
-                            continue;
-                        }
-
-                        foreach (string availablePort in SerialPort.GetPortNames())
-                        {
-                            if (deviceName.IndexOf("(" + availablePort + ")", StringComparison.OrdinalIgnoreCase) >= 0)
-                            {
-                                return availablePort;
-                            }
-                        }
-                    }
-                }
+                BeginOperationLoading("در حال آماده‌سازی دستگاه...");
+                _connection.CommandSent += DeviceCommandSent;
+                _connection.RawDataReceived += DeviceResponseReceived;
+                _connection.ErrorOccurred += DeviceCommunicationError;
+                _operations = CreateOperations(_connection);
+                _connectedApprovedPort = _connection.PortName;
+                _approvedDeviceWasPresent = true;
+                _enterStatusIsKnown = false;
+                _hidStatusIsKnown = false;
+                _buzzerStatusIsKnown = false;
+                UpdateToggleButtons();
+                SetConnected(false);
+                Status("توکن دستگاه تأیید شد.", true);
+                ReadDeviceSettings();
+                ReadUsersFromDevice();
+                SetConnected(true);
             }
-            catch (ManagementException)
+            catch (Exception exception)
             {
-                return string.Empty;
+                CloseConnection();
+                _connectedApprovedPort = string.Empty;
+                Status("آماده‌سازی دستگاه انجام نشد: " + exception.Message, false);
             }
-
-            return string.Empty;
+            finally
+            {
+                _isConnecting = false;
+            }
         }
 
-        private static bool IsApprovedDevice(string pnpDeviceId)
+        private static SafeDocOperations CreateOperations(DeviceConnectionService connection)
         {
-            if (string.IsNullOrEmpty(pnpDeviceId))
-            {
-                return false;
-            }
-
-            return pnpDeviceId.IndexOf(ApprovedVendorId, StringComparison.OrdinalIgnoreCase) >= 0
-                && pnpDeviceId.IndexOf(ApprovedProductId, StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-        private static bool IsAvailableSerialPort(string portName)
-        {
-            foreach (string availablePort in SerialPort.GetPortNames())
-            {
-                if (string.Equals(availablePort, portName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static void HidePasswordValue(JToken token)
-        {
-            JObject objectToken = token as JObject;
-            if (objectToken != null)
-            {
-                JProperty passwordProperty = objectToken.Property("passValue");
-                if (passwordProperty != null)
-                {
-                    passwordProperty.Value = "***";
-                }
-            }
-
-            foreach (JToken child in token.Children())
-            {
-                HidePasswordValue(child);
-            }
+            return new SafeDocOperations(
+                connection,
+                DeviceConfiguration.CommandTimeoutMilliseconds,
+                DeviceConfiguration.SettingsTimeoutMilliseconds,
+                DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds,
+                DeviceConfiguration.CommandIntervalMilliseconds
+            );
         }
 
         // وضعیت فرم
@@ -313,6 +288,7 @@ namespace SafeDoc.UI
             {
                 _enterStatusIsKnown = false;
                 _hidStatusIsKnown = false;
+                _buzzerStatusIsKnown = false;
                 UpdateToggleButtons();
             }
 
@@ -322,46 +298,143 @@ namespace SafeDoc.UI
             groupUsers.Enabled = controlsEnabled;
             UpdateUserEditorState();
             lblConnection.Text = ok ? "وضعیت دستگاه تأییدشده: ● متصل" : "وضعیت دستگاه تأییدشده: ● پیدا نشد";
-            lblConnection.ForeColor = ok
-                ? System.Drawing.Color.ForestGreen
-                : System.Drawing.Color.Firebrick;
+            lblConnection.ForeColor = ok ? System.Drawing.Color.ForestGreen : System.Drawing.Color.Firebrick;
         }
 
-        // 2
+        private void DeviceCommandSent(object sender, string command)
+        {
+            UpdateDeviceOperationStage(
+                35,
+                "مرحله ۱ از ۳ | فرمان برای دستگاه ارسال شد؛ منتظر پاسخ هستیم.",
+                true
+            );
+            WriteOperationLog("درخواست ارسال‌شده به دستگاه", command, true);
+        }
+
+        private void DeviceResponseReceived(object sender, string response)
+        {
+            WriteOperationLog("داده دریافتی از دستگاه", response, true);
+        }
+
+        private void DeviceCommunicationError(object sender, string message)
+        {
+            UpdateDeviceOperationStage(
+                100,
+                "مرحله ۳ از ۳ | ارتباط با دستگاه با خطا روبه‌رو شد.",
+                false
+            );
+            WriteOperationLog("خطای ارتباط با دستگاه", message, false);
+        }
+
+        private void UpdateDeviceOperationStage(int value, string message, bool ok)
+        {
+            if (IsDisposed || IsHandleCreated == false)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(
+                    new Action<int, string, bool>(UpdateDeviceOperationStage),
+                    value,
+                    message,
+                    ok
+                );
+                return;
+            }
+
+            SetOperationProgress(value, message);
+            lblOperationProgress.ForeColor = ok
+                ? Color.FromArgb(96, 165, 250)
+                : Color.FromArgb(251, 113, 133);
+            lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
+        }
+
+        private void WriteOperationLog(string title, string message, bool ok)
+        {
+            if (IsDisposed || IsHandleCreated == false)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(
+                    new Action<string, string, bool>(WriteOperationLog),
+                    title,
+                    message,
+                    ok
+                );
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return;
+            }
+
+            string line = DateTime.Now.ToString("HH:mm:ss")
+                + " | "
+                + title
+                + Environment.NewLine
+                + message.Trim()
+                + Environment.NewLine
+                + "────────────────────────"
+                + Environment.NewLine;
+
+            txtOperationLog.SelectionStart = txtOperationLog.TextLength;
+            txtOperationLog.SelectionColor = ok
+                ? Color.FromArgb(191, 219, 254)
+                : Color.FromArgb(253, 164, 175);
+            txtOperationLog.AppendText(line);
+            txtOperationLog.SelectionColor = txtOperationLog.ForeColor;
+            txtOperationLog.SelectionStart = txtOperationLog.TextLength;
+            txtOperationLog.ScrollToCaret();
+        }
+
         private void Status(string text, bool ok)
         {
             lblOperationProgress.Text = text;
             lblOperationProgress.ToolTipText = text;
-            lblOperationProgress.ForeColor = ok
-                ? System.Drawing.Color.FromArgb(74, 222, 128)
-                : System.Drawing.Color.FromArgb(251, 113, 133);
+            lblOperationProgress.ForeColor = ok ? System.Drawing.Color.FromArgb(74, 222, 128) : System.Drawing.Color.FromArgb(251, 113, 133);
+            lblOperationProgressText.Text = text;
+            lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
+            WriteOperationLog("وضعیت برنامه", text, ok);
 
             if (_operationInProgress == false)
             {
                 operationProgressBar.Style = ProgressBarStyle.Continuous;
                 operationProgressBar.Value = 100;
+                operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
+                operationProgressBarLarge.Value = 100;
             }
 
             if (ok == false)
             {
-                SetOperationProgress(100, text);
+                SetOperationProgress(100, "مرحله ۳ از ۳ | " + text);
                 EndOperationLoading();
             }
-
             operationStatusStrip.Refresh();
         }
-
         private void BeginOperationLoading(string message)
         {
             _operationInProgress = true;
             groupFingerprint.Enabled = false;
-            groupSettings.Enabled = _deviceIsConnected;
+            groupSettings.Enabled = false;
             groupUsers.Enabled = false;
             UseWaitCursor = true;
-            operationProgressBar.Style = ProgressBarStyle.Marquee;
-            lblOperationProgress.Text = message;
-            lblOperationProgress.ToolTipText = message;
+            operationProgressBar.Style = ProgressBarStyle.Continuous;
+            operationProgressBar.Value = 10;
+            operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
+            operationProgressBarLarge.Value = 10;
+            string stageMessage = "مرحله ۱ از ۳ | " + message;
+            lblOperationProgress.Text = stageMessage;
+            lblOperationProgress.ToolTipText = stageMessage;
             lblOperationProgress.ForeColor = System.Drawing.Color.FromArgb(226, 232, 240);
+            lblOperationProgressText.Text = stageMessage;
+            lblOperationProgressText.ForeColor = lblOperationProgress.ForeColor;
+            WriteOperationLog("شروع عملیات", message, true);
             operationStatusStrip.Refresh();
         }
 
@@ -370,6 +443,7 @@ namespace SafeDoc.UI
             _operationInProgress = false;
             UseWaitCursor = false;
             operationProgressBar.Style = ProgressBarStyle.Continuous;
+            operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
             groupFingerprint.Enabled = _deviceIsConnected;
             groupSettings.Enabled = _deviceIsConnected;
             groupUsers.Enabled = _deviceIsConnected;
@@ -389,8 +463,11 @@ namespace SafeDoc.UI
             }
 
             operationProgressBar.Value = value;
+            operationProgressBarLarge.Style = ProgressBarStyle.Continuous;
+            operationProgressBarLarge.Value = value;
             lblOperationProgress.Text = message;
             lblOperationProgress.ToolTipText = message;
+            lblOperationProgressText.Text = message;
             operationStatusStrip.Refresh();
         }
 
@@ -403,17 +480,22 @@ namespace SafeDoc.UI
 
             if (code == 1)
             {
-                return "شناسه داخلی تکراری است";
+                return "شناسه کاربر تکراری است";
             }
 
             if (code == 2)
             {
-                return "اثر انگشت ثبت‌ شده پیدا نشد";
+                return "شناسه کاربر در دستگاه پیدا نشد";
             }
 
             if (code == 3)
             {
                 return "زمان ثبت اثرانگشت تمام شد";
+            }
+
+            if (code == 4)
+            {
+                return "خطای دستگاه";
             }
 
             if (code == 7)
@@ -426,6 +508,11 @@ namespace SafeDoc.UI
                 return "نام رمز پیدا نشد";
             }
 
+            if (code == 9)
+            {
+                return "شناسه واردشده با اثر انگشت دستگاه مطابقت ندارد";
+            }
+
             if (code == 10)
             {
                 return "زمان انقضا ثبت نشده است";
@@ -436,7 +523,7 @@ namespace SafeDoc.UI
                 return "رمزی ثبت نشده است";
             }
 
-            return "کد اختصاصی دستگاه";
+            return "کد ناشناخته دستگاه: " + code;
         }
 
         private bool Ready()
@@ -452,25 +539,18 @@ namespace SafeDoc.UI
             return false;
         }
 
-        private void ShowDeviceResponse(
-            SafeDocResponse response,
-            bool showMessage = true,
-            bool completeOperation = true
-        )
+        private void ShowDeviceResponse(SafeDocResponse response, bool showMessage = true, bool completeOperation = true)
         {
             try
             {
-                string deviceResult = response.isSuccess
-                    ? "پاسخ دستگاه: عملیات موفق بود."
-                    : "پاسخ دستگاه: " + DescribeStatusCode(response.responseStatusCode);
+                string deviceResult = response.isSuccess ? "پاسخ دستگاه: عملیات موفق بود." : "پاسخ دستگاه: " + DescribeStatusCode(response.responseStatusCode);
                 SetOperationProgress(
-                    100,
-                    deviceResult
+                    75,
+                    "مرحله ۲ از ۳ | پاسخ دستگاه دریافت شد؛ نتیجه در حال بررسی است."
                 );
-                Status(
-                    deviceResult,
-                    response.isSuccess
-                );
+                WriteOperationLog("پاسخ نهایی دستگاه", deviceResult + " کد پاسخ: " + response.responseStatusCode, response.isSuccess);
+                SetOperationProgress(100, "مرحله ۳ از ۳ | " + deviceResult);
+                Status("مرحله ۳ از ۳ | " + deviceResult, response.isSuccess);
                 if (completeOperation)
                 {
                     EndOperationLoading();
@@ -498,9 +578,9 @@ namespace SafeDoc.UI
                         + Environment.NewLine
                         + Environment.NewLine
                         + "آیا ادامه می‌دهید؟",
-                    "تأیید عملیات",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning
+                        "تأیید عملیات",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning
                 ) == DialogResult.Yes
             )
             {
@@ -545,7 +625,8 @@ namespace SafeDoc.UI
 
             try
             {
-                SafeDocResponse response = _operations.GetAllUsers();
+                List<SafeDocDeviceUser> deviceUsers;
+                SafeDocResponse response = _operations.GetAllUsers(out deviceUsers);
                 if (response == null)
                 {
                     Status("دستگاه برای فهرست کاربران پاسخ معتبری برنگرداند.", false);
@@ -554,10 +635,9 @@ namespace SafeDoc.UI
                 else
                 {
                     ShowDeviceResponse(response, false, completeOperation);
-                    HashSet<int> flashPermissionUserIds = LoadFlashPermissionUserIds();
                     _deviceUsers.Clear();
                     _selectedUser = null;
-                    AddDeviceUsersToGrid(response, flashPermissionUserIds);
+                    AddDeviceUsersToGrid(deviceUsers);
 
                     dgvUsers.Refresh();
                     ApplyFingerprintRowColors();
@@ -565,10 +645,7 @@ namespace SafeDoc.UI
                     int deviceUserCount = CountRealDeviceUsers();
                     bool hasDeviceData = deviceUserCount >= 0;
                     bool listWasRead = response.isSuccess || hasDeviceData;
-                    Status(
-                        "فهرست کاربران از دستگاه خوانده شد. تعداد کاربران ثبت‌شده: " + deviceUserCount,
-                        listWasRead
-                    );
+                    Status("فهرست کاربران از دستگاه خوانده شد. تعداد کاربران ثبت‌شده: " + deviceUserCount,listWasRead);
 
                     if (completeOperation == false && listWasRead == false)
                     {
@@ -585,162 +662,49 @@ namespace SafeDoc.UI
             }
         }
 
-        private static JToken ReadDeviceUserToken(JObject deviceUser, params string[] names)
+        private void AddDeviceUsersToGrid(List<SafeDocDeviceUser> deviceUsers)
         {
-            if (deviceUser == null || names == null)
+            foreach (SafeDocDeviceUser deviceUser in deviceUsers)
             {
-                return null;
-            }
-
-            foreach (JProperty property in deviceUser.Properties())
-            {
-                foreach (string name in names)
+                if (deviceUser.UserId < 1 || deviceUser.UserId > 10)
                 {
-                    if (string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return property.Value;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private static string ReadDeviceUserValue(JObject deviceUser, params string[] names)
-        {
-            JToken valueToken = ReadDeviceUserToken(deviceUser, names);
-            string value = valueToken == null ? string.Empty : valueToken.ToString();
-            return string.IsNullOrWhiteSpace(value) ? "—" : value;
-        }
-
-        private void AddDeviceUsersToGrid(SafeDocResponse response, HashSet<int> flashPermissionUserIds)
-        {
-            List<object> deviceUsers = response.resultData ?? new List<object>();
-            foreach (object item in deviceUsers)
-            {
-                JToken token = item as JToken;
-                if (token == null)
-                {
-                    try
-                    {
-                        token = JToken.Parse(item.ToString());
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
-                AddDeviceUsersFromToken(token, flashPermissionUserIds);
-            }
-        }
-
-        private void AddDeviceUsersFromToken(JToken token, HashSet<int> flashPermissionUserIds)
-        {
-            if (token == null)
-            {
-                return;
-            }
-
-            JArray usersArray = token as JArray;
-            if (usersArray != null)
-            {
-                foreach (JToken userToken in usersArray)
+                SafeDocUserRow user = new SafeDocUserRow
                 {
-                    AddDeviceUsersFromToken(userToken, flashPermissionUserIds);
-                }
-
-                return;
-            }
-
-            JObject userObject = token as JObject;
-            if (userObject == null)
-            {
-                return;
-            }
-
-            if (ReadDeviceUserToken(userObject, "userId", "id") != null)
-            {
-                AddDeviceUserToGrid(userObject, flashPermissionUserIds);
-                return;
-            }
-
-            foreach (JProperty property in userObject.Properties())
-            {
-                AddDeviceUsersFromToken(property.Value, flashPermissionUserIds);
-            }
-        }
-
-        private void AddDeviceUserToGrid(JObject deviceUser, HashSet<int> flashPermissionUserIds)
-        {
-            if (deviceUser == null)
-            {
-                return;
-            }
-
-            int userId;
-            if (
-                int.TryParse(NormalizeDigits(ReadDeviceUserValue(deviceUser, "userId", "id")),out userId) == false
-                || userId < 1
-                || userId > 10
-            )
-            {
-                return;
-            }
-
-            foreach (SafeDocUserRow currentUser in _deviceUsers)
-            {
-                if (currentUser.UserId == userId)
-                {
-                    return;
-                }
-            }
-
-            _deviceUsers.Add(
-                new SafeDocUserRow
-                {
-                    UserId = userId,
+                    UserId = deviceUser.UserId,
+                    UserName = deviceUser.UserName,
+                    Pass = deviceUser.Pass,
                     FingerprintStatus = "ثبت شده",
-                    UserName = ReadDeviceUserValue(deviceUser, "userName", "passName", "name"),
-                    Pass = ReadDeviceUserValue(deviceUser, "pass", "passValue", "password"),
-                    ExpireDate = ReadDeviceUserValue(deviceUser, "expireDate", "expirationDate", "expiryDate"),
-                    ExpireTime = ReadDeviceUserValue(deviceUser, "expireTime", "expirationTime", "expiryTime"),
-                    FlashPermission = flashPermissionUserIds.Contains(userId)
-                }
-            );
+                    FlashPermission = deviceUser.IsUseFlash,
+                    UsbUseCount = deviceUser.UseUsbFlashCount,
+                    UsbUsedTimes = deviceUser.UsbUsedTimes
+                };
+
+                SetUserExpirationFromDevice(user, deviceUser.Expire);
+                _deviceUsers.Add(user);
+            }
         }
 
-        private void ReadUserFromDevice(int userId)
+        private static void SetUserExpirationFromDevice(SafeDocUserRow user, long timestamp)
         {
-            try
+            if (timestamp <= 0)
             {
-                Task.Delay(DeviceReadyDelayMilliseconds);
-                SafeDocResponse response = _operations.GetUser(userId.ToString());
-                ShowDeviceResponse(response, false);
-                if (response.isSuccess == false)
-                {
-                    return;
-                }
-
-                for (int index = _deviceUsers.Count - 1; index >= 0; index--)
-                {
-                    Task.Delay(DeviceReadyDelayMilliseconds);
-                    SafeDocUserRow currentUser = _deviceUsers[index];
-                    if (currentUser.UserId.HasValue == false || currentUser.UserId.Value == userId)
-                    {
-                        _deviceUsers.RemoveAt(index);
-                    }
-                }
-
-                AddDeviceUsersToGrid(response, LoadFlashPermissionUserIds());
-                dgvUsers.Refresh();
-                ApplyFingerprintRowColors();
-                Status("کاربر تکراری با شناسه " + userId + " از دستگاه خوانده و در گرید نمایش داده شد.", true);
+                user.ExpireDate = "بدون انقضا";
+                user.ExpireTime = "—";
+                return;
             }
-            catch (Exception exception)
-            {
-                Status("خواندن کاربر تکراری از دستگاه انجام نشد: " + exception.Message, false);
-            }
+
+            DateTime expiration = DateTimeOffset.FromUnixTimeSeconds(timestamp).LocalDateTime;
+            PersianCalendar calendar = new PersianCalendar();
+            user.ExpireDate = string.Format(
+                "{0:0000}/{1:00}/{2:00}",
+                calendar.GetYear(expiration),
+                calendar.GetMonth(expiration),
+                calendar.GetDayOfMonth(expiration)
+            );
+            user.ExpireTime = expiration.ToString("HH:mm");
         }
 
         private bool TryGetSelectedUser(out SafeDocUserRow selectedUser)
@@ -749,6 +713,7 @@ namespace SafeDoc.UI
             if (selectedUser == null || selectedUser.UserId.HasValue == false)
             {
                 Status("ابتدا یک کاربر را از گرید انتخاب کنید.", false);
+                ShowValidationMessage("یک ردیف از لیست کاربران را انتخاب کنید.");
                 return false;
             }
 
@@ -837,7 +802,8 @@ namespace SafeDoc.UI
             expirationDateSelector.Value = defaultExpiration;
             txtExpirationTime.Text = defaultExpiration.ToString("HH:mm");
             chkFlashPermission.Checked = false;
-            Status("عملیات لغو شد",true);
+            nudUsbUseCount.Value = GetDefaultUsbUseCount();
+            Status("عملیات لغو شد", true);
         }
 
         private void UpdateUserEditorState()
@@ -851,8 +817,10 @@ namespace SafeDoc.UI
             expirationDateSelector.Enabled = canEditInputs;
             txtExpirationTime.Enabled = canEditInputs;
             chkFlashPermission.Enabled = canEditInputs;
+            nudUsbUseCount.Enabled = canEditInputs && chkFlashPermission.Checked;
             btnEnrollFingerprint.Enabled = canUseEditor;
             btnCancelUser.Enabled = canEditInputs;
+            btnIdentifyFingerprint.Enabled = canUseEditor;
             btnEnrollFingerprint.Text = _isEditMode
                 ? "ذخیره ویرایش"
                 : _isNewUserEntryMode ? "ذخیره کاربر جدید" : "ثبت کاربر جدید";
@@ -876,6 +844,7 @@ namespace SafeDoc.UI
                 ? string.Empty
                 : _selectedUser.ExpireTime;
             chkFlashPermission.Checked = _selectedUser.FlashPermission;
+            nudUsbUseCount.Value = GetValidUsbUseCount(_selectedUser.UsbUseCount);
             SetExpirationDateInput(_selectedUser.ExpireDate);
         }
 
@@ -927,7 +896,7 @@ namespace SafeDoc.UI
             UpdateSelectedUser();
         }
 
-      
+
 
         private int GetNextAvailableUserId()
         {
@@ -1004,6 +973,7 @@ namespace SafeDoc.UI
             if (passwordName.Length == 0 || passwordName.Length > 10)
             {
                 Status("نام رمز باید بین ۱ تا ۱۰ کاراکتر باشد.", false);
+                ShowValidationMessage("نام رمز را بین ۱ تا ۱۰ کاراکتر وارد کنید.");
                 return;
             }
 
@@ -1011,6 +981,14 @@ namespace SafeDoc.UI
             if (password.Length == 0 || password.Length > 20)
             {
                 Status("رمز باید بین ۱ تا ۲۰ کاراکتر باشد.", false);
+                ShowValidationMessage("گذرواژه را بین ۱ تا ۲۰ کاراکتر وارد کنید.");
+                return;
+            }
+
+            if (IsAllowedPassword(password) == false)
+            {
+                Status("رمز فقط می‌تواند شامل حروف، عدد و علامت‌های انگلیسی باشد.", false);
+                ShowValidationMessage("گذرواژه را با حروف، عدد و علامت‌های انگلیسی وارد کنید.");
                 return;
             }
 
@@ -1078,18 +1056,21 @@ namespace SafeDoc.UI
             if (passName.Length == 0 || passName.Length > 10)
             {
                 Status("نام کاربری باید بین ۱ تا ۱۰ کاراکتر باشد.", false);
+                ShowValidationMessage("نام کاربری را بین ۱ تا ۱۰ کاراکتر وارد کنید.");
                 return;
             }
 
             if (pass.Length == 0 || pass.Length > 20)
             {
                 Status("رمز باید بین ۱ تا ۲۰ کاراکتر باشد.", false);
+                ShowValidationMessage("گذرواژه را بین ۱ تا ۲۰ کاراکتر وارد کنید.");
                 return;
             }
 
             if (IsAllowedPassword(pass) == false)
             {
                 Status("رمز فقط می‌تواند شامل حروف، عدد و علامت‌های انگلیسی باشد.", false);
+                ShowValidationMessage("گذرواژه را با حروف، عدد و علامت‌های انگلیسی وارد کنید.");
                 return;
             }
 
@@ -1100,14 +1081,11 @@ namespace SafeDoc.UI
 
             int userId;
             bool isEditing = _isEditMode && _selectedUser != null && _selectedUser.UserId.HasValue;
+            SafeDocUserRow user;
             if (isEditing)
             {
                 userId = _selectedUser.UserId.Value;
-                _selectedUser.UserName = passName;
-                _selectedUser.Pass = pass;
-                _selectedUser.ExpireDate = GetSelectedExpirationDate();
-                _selectedUser.ExpireTime = NormalizeDigits(txtExpirationTime.Text);
-                _selectedUser.FlashPermission = chkFlashPermission.Checked;
+                user = _selectedUser;
             }
             else
             {
@@ -1115,28 +1093,66 @@ namespace SafeDoc.UI
                 if (userId < 1 || userId > 10)
                 {
                     Status("ابتدا ثبت کاربر جدید را بزنید تا شناسه از دستگاه گرفته شود.", false);
+                    ShowValidationMessage("ابتدا دکمه «ثبت کاربر جدید» را بزنید.");
                     return;
                 }
 
-                _deviceUsers.Add(
-                    new SafeDocUserRow
-                    {
-                        UserId = userId,
-                        UserName = passName,
-                        Pass = pass,
-                        ExpireDate = GetSelectedExpirationDate(),
-                        ExpireTime = NormalizeDigits(txtExpirationTime.Text),
-                        FingerprintStatus = "ثبت نشده",
-                        FlashPermission = chkFlashPermission.Checked
-                    }
-                );
+                user = new SafeDocUserRow();
+                user.UserId = userId;
+                user.FingerprintStatus = "ثبت نشده";
+                _deviceUsers.Add(user);
             }
 
-            SaveFlashPermissionUserIds();
-            dgvUsers.Refresh();
-            ApplyFingerprintRowColors();
-            CancelUserOperation();
-            Status(isEditing ? "ویرایش کاربر در گرید ذخیره شد." : "کاربر جدید در گرید ذخیره شد.", true);
+            user.UserName = passName;
+            user.Pass = pass;
+            user.ExpireDate = GetSelectedExpirationDate();
+            user.ExpireTime = NormalizeDigits(txtExpirationTime.Text);
+            user.FlashPermission = chkFlashPermission.Checked;
+            user.UsbUseCount = chkFlashPermission.Checked
+                ? (int)nudUsbUseCount.Value
+                : 0;
+
+            RegisterFingerprint(user);
+        }
+
+        private int GetUsbUseCountForSave(SafeDocUserRow user)
+        {
+            if (user.FlashPermission == false)
+            {
+                return 0;
+            }
+
+            if (user.UsbUseCount > 0)
+            {
+                return user.UsbUseCount;
+            }
+
+            return DeviceConfiguration.DefaultUsbUseCount;
+        }
+
+        private decimal GetDefaultUsbUseCount()
+        {
+            return GetValidUsbUseCount(DeviceConfiguration.DefaultUsbUseCount);
+        }
+
+        private decimal GetValidUsbUseCount(int count)
+        {
+            if (count < 1)
+            {
+                return 1;
+            }
+
+            if (count > 255)
+            {
+                return 255;
+            }
+
+            return count;
+        }
+
+        private void chkFlashPermission_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUserEditorState();
         }
 
         private string GetSelectedExpirationDate()
@@ -1175,17 +1191,30 @@ namespace SafeDoc.UI
             {
                 if (user.FingerprintStatus == "ثبت شده")
                 {
-                    Task.Delay(3000);
+                    Status("در حال پاک‌کردن رمزهای قبلی کاربر " + user.UserId + "...", true);
                     SafeDocResponse deletePasswordsResponse = _operations.DeleteAllPasswords(
                         user.UserId.Value.ToString()
                     );
-                    ShowDeviceResponse(deletePasswordsResponse, true, false);
-                    if (deletePasswordsResponse.isSuccess == false)
+                    if (
+                        deletePasswordsResponse.isSuccess == false
+                        && deletePasswordsResponse.responseStatusCode != 11
+                    )
                     {
+                        ShowDeviceResponse(deletePasswordsResponse, true, false);
                         EndOperationLoading();
                         return;
                     }
-                    Task.Delay(3000);
+
+                    if (deletePasswordsResponse.isSuccess)
+                    {
+                        ShowDeviceResponse(deletePasswordsResponse, true, false);
+                    }
+                    else
+                    {
+                        Status("رمز قبلی برای این کاربر وجود نداشت؛ ادامهٔ ویرایش انجام می‌شود.", true);
+                    }
+
+                    Status("در حال پاک‌کردن اثرانگشت قبلی کاربر " + user.UserId + "...", true);
                     SafeDocResponse deleteFingerprintResponse = _operations.DeleteFingerprint(
                         user.UserId.Value.ToString()
                     );
@@ -1196,7 +1225,6 @@ namespace SafeDoc.UI
                         return;
                     }
                 }
-                Task.Delay(3000);
                 Status("اثر انگشت کاربر " + user.UserId + " را روی دستگاه قرار دهید.", true);
                 SafeDocResponse enrollResponse = _operations.EnrollFingerprint(user.UserId.Value.ToString());
                 ShowDeviceResponse(enrollResponse, true, false);
@@ -1205,42 +1233,76 @@ namespace SafeDoc.UI
                     EndOperationLoading();
                     return;
                 }
-                Task.Delay(3000);
-                SafeDocResponse passwordResponse = _operations.AddPassword(
+                SafeDocResponse savePersonResponse = _operations.SavePerson(
                     user.UserId.Value.ToString(),
                     user.UserName,
-                    user.Pass
+                    user.Pass,
+                    expirationTimestamp,
+                    user.FlashPermission,
+                    GetUsbUseCountForSave(user)
                 );
-                ShowDeviceResponse(passwordResponse, true, false);
-                if (passwordResponse.isSuccess == false)
+                ShowDeviceResponse(savePersonResponse, true, false);
+                if (savePersonResponse.isSuccess == false)
                 {
                     DeleteIncompleteFingerprint(user.UserId.Value.ToString());
                     EndOperationLoading();
                     return;
                 }
-                Task.Delay(DeviceReadyDelayMilliseconds);
-                SafeDocResponse expirationResponse = _operations.SetExpiration(
-                    user.UserId.Value.ToString(),
-                    expirationTimestamp
-                );
-                ShowDeviceResponse(expirationResponse, true, false);
-                if (expirationResponse.isSuccess == false)
-                {
-                    EndOperationLoading();
-                    return;
-                }
 
                 user.FingerprintStatus = "ثبت شده";
-                SaveFlashPermission(user.UserId.Value, user.FlashPermission);
+                SaveFlashPermissionUserIds();
                 dgvUsers.Refresh();
                 ApplyFingerprintRowColors();
+                CancelUserOperation();
                 EndOperationLoading();
-                Status("اثر انگشت، رمز و تاریخ انقضای کاربر ثبت شد.", true);
+                Status("اثر انگشت ثبت شد و مشخصات کامل کاربر ذخیره شد.", true);
             }
             catch (Exception exception)
             {
                 EndOperationLoading();
                 Status("ثبت اثر انگشت انجام نشد: " + exception.Message, false);
+            }
+        }
+
+        private void IdentifyFingerprintUser()
+        {
+            if (Ready() == false)
+            {
+                return;
+            }
+
+            try
+            {
+                Status("انگشت کاربر را روی دستگاه قرار دهید.", true);
+                int userId;
+                SafeDocResponse response = _operations.GetFingerprintUserId(out userId);
+                ShowDeviceResponse(response);
+                if (response.isSuccess == false)
+                {
+                    return;
+                }
+
+                for (int rowIndex = 0; rowIndex < dgvUsers.Rows.Count; rowIndex++)
+                {
+                    SafeDocUserRow user = dgvUsers.Rows[rowIndex].DataBoundItem as SafeDocUserRow;
+                    if (user == null || user.UserId.HasValue == false)
+                    {
+                        continue;
+                    }
+
+                    if (user.UserId.Value == userId)
+                    {
+                        BeginEditSelectedUser(rowIndex);
+                        Status("اطلاعات کاربر " + user.UserName + " در فرم نمایش داده شد.", true);
+                        return;
+                    }
+                }
+
+                Status("اثر انگشت شناسایی شد، اما اطلاعات این کاربر در گرید نیست.", false);
+            }
+            catch (Exception exception)
+            {
+                Status("شناسایی اثر انگشت انجام نشد: " + exception.Message, false);
             }
         }
 
@@ -1312,7 +1374,6 @@ namespace SafeDoc.UI
                 {
                     return;
                 }
-                Task.Delay(DeviceReadyDelayMilliseconds);
                 SafeDocResponse response = _operations.DeleteFingerprint(selectedUser.UserId.ToString());
                 ShowDeviceResponse(response);
                 if (response.isSuccess)
@@ -1481,7 +1542,7 @@ namespace SafeDoc.UI
 
             DateTime selectedDate = deviceDateSelector.Value.Value;
             PersianCalendar persianCalendar = new PersianCalendar();
-            string deviceDate = string.Format("{0:0000}-{1:00}-{2:00}",persianCalendar.GetYear(selectedDate),persianCalendar.GetMonth(selectedDate),persianCalendar.GetDayOfMonth(selectedDate));
+            string deviceDate = string.Format("{0:0000}-{1:00}-{2:00}", persianCalendar.GetYear(selectedDate), persianCalendar.GetMonth(selectedDate), persianCalendar.GetDayOfMonth(selectedDate));
             string deviceTime;
             if (TryGetValidTime(txtDeviceTime.Text, out deviceTime) == false)
             {
@@ -1507,7 +1568,6 @@ namespace SafeDoc.UI
 
                 if (response.isSuccess)
                 {
-                    Task.Delay(DeviceReadyDelayMilliseconds);
                     ReadCurrentDeviceDateTime();
                 }
             }
@@ -1526,7 +1586,8 @@ namespace SafeDoc.UI
 
             try
             {
-                SafeDocResponse response = _operations.GetDeviceDateTime();
+                SafeDocDeviceSettings settings;
+                SafeDocResponse response = _operations.GetDeviceDateTime(out settings);
                 if (response.isSuccess == false)
                 {
                     ShowDeviceResponse(response, false);
@@ -1534,26 +1595,17 @@ namespace SafeDoc.UI
                 }
 
                 ShowDeviceResponse(response, false);
-                ShowCurrentDeviceDateTime(response);
+                ShowCurrentDeviceDateTime(settings);
             }
             catch (Exception ex)
             {
                 Status("خواندن ساعت انجام نشد: " + ex.Message, false);
             }
         }
-        private void ShowCurrentDeviceDateTime(SafeDocResponse response)
+        private void ShowCurrentDeviceDateTime(SafeDocDeviceSettings settings)
         {
-            string deviceDate = string.Empty;
-            string deviceTime = string.Empty;
-            if (response.resultData != null)
-            {
-                foreach (object item in response.resultData)
-                {
-                    JObject resultObject = GetDeviceResultObject(item);
-                    deviceDate = ReadDeviceDateTimeValue(resultObject, "date", deviceDate);
-                    deviceTime = ReadDeviceDateTimeValue(resultObject, "time", deviceTime);
-                }
-            }
+            string deviceDate = settings.Date;
+            string deviceTime = settings.Time;
 
             if (string.IsNullOrEmpty(deviceDate) || string.IsNullOrEmpty(deviceTime))
             {
@@ -1660,39 +1712,6 @@ namespace SafeDoc.UI
             return normalizedTime;
         }
 
-        private static JObject GetDeviceResultObject(object item)
-        {
-            JObject resultObject = item as JObject;
-            if (resultObject != null)
-            {
-                return resultObject;
-            }
-
-            if (item == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                return JObject.Parse(item.ToString());
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static string ReadDeviceDateTimeValue(JObject resultObject,string propertyName,string currentValue)
-        {
-            if (resultObject == null || resultObject[propertyName] == null)
-            {
-                return currentValue;
-            }
-
-            return resultObject[propertyName].ToString();
-        }
-
         private bool TryCreateExpirationTimestamp(out long timestamp)
         {
             timestamp = 0;
@@ -1739,6 +1758,7 @@ namespace SafeDoc.UI
             catch (ArgumentOutOfRangeException)
             {
                 Status("تاریخ یا ساعت معتبر نیست.", false);
+                ShowValidationMessage("تاریخ و ساعت انقضا را به‌صورت معتبر وارد کنید.");
                 return false;
             }
         }
@@ -1778,6 +1798,15 @@ namespace SafeDoc.UI
         private void ShowValidationMessage(string instruction)
         {
             SetOperationProgress(100, "مقدار واردشده معتبر نیست: " + instruction);
+            MessageBox.Show(
+                "⚠ اطلاعات واردشده معتبر نیست."
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + instruction,
+                "بررسی اطلاعات",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
         }
         private static string NormalizeDigits(string value)
         {
@@ -1846,9 +1875,10 @@ namespace SafeDoc.UI
             }
 
             int timeout;
-            if (int.TryParse(txtUsbTimeout.Text, out timeout) == false)
+            if (int.TryParse(txtUsbTimeout.Text, out timeout) == false || timeout < 0)
             {
                 Status("مهلت دسترسی USB به حافظه داخلی را فقط به صورت عدد وارد کنید.", false);
+                ShowValidationMessage("مهلت دسترسی USB را با عدد صفر یا بزرگ‌تر وارد کنید.");
                 return;
             }
 
@@ -1892,147 +1922,67 @@ namespace SafeDoc.UI
             SaveHidStatus();
         }
 
-        private void ReadEnterStatusFromDevice()
+        private void SaveBuzzerStatus()
+        {
+            if (Ready() == false)
+            {
+                return;
+            }
+
+            try
+            {
+                SafeDocResponse response = _operations.SetBuzzerStatus(_buzzerStatus);
+                ShowDeviceResponse(response);
+                _buzzerStatusIsKnown = response.isSuccess;
+                UpdateToggleButtons();
+            }
+            catch (Exception exception)
+            {
+                _buzzerStatusIsKnown = false;
+                UpdateToggleButtons();
+                Status("ذخیره وضعیت بازر انجام نشد: " + exception.Message, false);
+            }
+        }
+
+        private void ToggleBuzzerStatus()
+        {
+            _buzzerStatus = _buzzerStatus == false;
+            UpdateToggleButtons();
+            SaveBuzzerStatus();
+        }
+
+        private void ReadDeviceSettings()
         {
             try
             {
-                SafeDocResponse response = _operations.GetEnterStatus();
+                SafeDocResponse response = ReadSettingsFromDevice();
+                SafeDocDeviceSettings settings = _lastDeviceSettings;
                 ShowDeviceResponse(response, false, false);
-
-                bool enabled;
-                if (TryReadDeviceBoolean(response, "enterStatus", out enabled) == false)
+                if (response == null || response.isSuccess == false)
                 {
-                    Status("وضعیت Enter از پاسخ دستگاه قابل‌خواندن نبود.", false);
                     return;
                 }
 
-                _sendEnterAfterPassword = enabled;
+                _sendEnterAfterPassword = settings.EnterStatus;
                 _enterStatusIsKnown = true;
-                UpdateToggleButtons();
-                Status("وضعیت Enter از دستگاه خوانده شد.", true);
-            }
-            catch (Exception exception)
-            {
-                Status("خواندن وضعیت Enter انجام نشد: " + exception.Message, false);
-            }
-        }
-
-        private void ReadHidStatusFromDevice()
-        {
-            try
-            {
-                SafeDocResponse response = _operations.GetHidAfterExpiration();
-                ShowDeviceResponse(response, false, false);
-
-                bool enabled;
-                if (TryReadDeviceBoolean(response, "HidStatusAfterExpiration", out enabled) == false)
-                {
-                    Status("وضعیت HID از پاسخ دستگاه قابل‌خواندن نبود.", false);
-                    return;
-                }
-
-                _keepHidAfterExpiration = enabled;
+                _keepHidAfterExpiration = settings.HidStatusAfterExpiration;
                 _hidStatusIsKnown = true;
+                _buzzerStatus = settings.BuzzerStatus;
+                _buzzerStatusIsKnown = true;
+                txtUsbTimeout.Text = settings.UsbConnectionTimeoutValue.ToString();
+                ShowCurrentDeviceDateTime(settings);
                 UpdateToggleButtons();
-                Status("وضعیت HID از دستگاه خوانده شد.", true);
+                Status("تنظیمات دستگاه خوانده شد.", true);
             }
             catch (Exception exception)
             {
-                Status("خواندن وضعیت HID انجام نشد: " + exception.Message, false);
+                Status("خواندن تنظیمات دستگاه انجام نشد: " + exception.Message, false);
             }
         }
 
-        private void ReadUsbTimeoutFromDevice()
+        private SafeDocResponse ReadSettingsFromDevice()
         {
-            try
-            {
-                SafeDocResponse response = _operations.GetUsbTimeout();
-                ShowDeviceResponse(response, false, false);
-
-                int timeout;
-                if (TryReadDeviceNumber(response, "usbConnectionTimeoutValue", out timeout) == false)
-                {
-                    Status("مهلت USB از پاسخ دستگاه قابل‌خواندن نبود.", false);
-                    return;
-                }
-
-                txtUsbTimeout.Text = timeout.ToString();
-                Status("مهلت USB از دستگاه خوانده شد.", true);
-            }
-            catch (Exception exception)
-            {
-                Status("خواندن مهلت USB انجام نشد: " + exception.Message, false);
-            }
-        }
-
-        private static bool TryReadDeviceBoolean(SafeDocResponse response, string propertyName, out bool value)
-        {
-            value = false;
-            string responseValue;
-            if (TryReadDeviceValue(response, propertyName, out responseValue) == false)
-            {
-                return false;
-            }
-
-            if (bool.TryParse(responseValue, out value))
-            {
-                return true;
-            }
-
-            if (responseValue == "1")
-            {
-                value = true;
-                return true;
-            }
-
-            if (responseValue == "0")
-            {
-                value = false;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static bool TryReadDeviceNumber(SafeDocResponse response, string propertyName, out int value)
-        {
-            value = 0;
-            string responseValue;
-            if (TryReadDeviceValue(response, propertyName, out responseValue) == false)
-            {
-                return false;
-            }
-
-            return int.TryParse(NormalizeDigits(responseValue), out value);
-        }
-
-        private static bool TryReadDeviceValue(SafeDocResponse response, string propertyName, out string value)
-        {
-            value = string.Empty;
-            if (response == null || response.isSuccess == false || response.resultData == null)
-            {
-                return false;
-            }
-
-            foreach (object item in response.resultData)
-            {
-                JObject resultObject = GetDeviceResultObject(item);
-                if (resultObject == null)
-                {
-                    continue;
-                }
-
-                foreach (JProperty property in resultObject.Properties())
-                {
-                    if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        value = property.Value.ToString();
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return _operations.GetAllSettings(out _lastDeviceSettings);
         }
 
         private void CloseConnection()
@@ -2064,6 +2014,11 @@ namespace SafeDoc.UI
             }
 
             StartNewUserRegistration();
+        }
+
+        private void btnIdentifyFingerprint_Click(object sender, EventArgs e)
+        {
+            IdentifyFingerprintUser();
         }
 
         // 8
@@ -2120,6 +2075,11 @@ namespace SafeDoc.UI
         private void btnHidAfterExpirationToggle_Click(object sender, EventArgs e)
         {
             ToggleHidAfterExpiration();
+        }
+
+        private void btnBuzzerStatusToggle_Click(object sender, EventArgs e)
+        {
+            ToggleBuzzerStatus();
         }
 
         private void deviceClockTimer_Tick(object sender, EventArgs e)
@@ -2403,7 +2363,7 @@ namespace SafeDoc.UI
             e.Handled = true;
         }
 
-          private void dgvUsers_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvUsers_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
             {

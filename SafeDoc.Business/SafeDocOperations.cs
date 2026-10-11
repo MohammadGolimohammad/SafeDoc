@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using SafeDoc.Models;
 
 namespace SafeDoc.Business
@@ -7,8 +8,18 @@ namespace SafeDoc.Business
     public sealed class SafeDocOperations
     {
         private readonly DeviceConnectionService _connection;
+        private readonly int _commandTimeoutMilliseconds;
+        private readonly int _settingsTimeoutMilliseconds;
+        private readonly int _fingerprintEnrollTimeoutMilliseconds;
+        private readonly int _commandIntervalMilliseconds;
 
-        public SafeDocOperations(DeviceConnectionService connection)
+        public SafeDocOperations(
+            DeviceConnectionService connection,
+            int commandTimeoutMilliseconds,
+            int settingsTimeoutMilliseconds,
+            int fingerprintEnrollTimeoutMilliseconds,
+            int commandIntervalMilliseconds
+        )
         {
             if (connection == null)
             {
@@ -16,6 +27,10 @@ namespace SafeDoc.Business
             }
 
             _connection = connection;
+            _commandTimeoutMilliseconds = commandTimeoutMilliseconds;
+            _settingsTimeoutMilliseconds = settingsTimeoutMilliseconds;
+            _fingerprintEnrollTimeoutMilliseconds = fingerprintEnrollTimeoutMilliseconds;
+            _commandIntervalMilliseconds = commandIntervalMilliseconds;
         }
 
         public SafeDocResponse EnrollFingerprint(string userId)
@@ -80,6 +95,13 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetTimeDate);
         }
 
+        public SafeDocResponse GetDeviceDateTime(out SafeDocDeviceSettings settings)
+        {
+            SafeDocResponse response = GetDeviceDateTime();
+            settings = _connection.ReadDeviceSettings(response);
+            return response;
+        }
+
         public SafeDocResponse GetPasswordNames(string userId)
         {
             return Send(SafeDocCommandType.GetAllPassName, User(userId));
@@ -136,9 +158,74 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetAllUsers);
         }
 
+        public SafeDocResponse GetAllUsers(out List<SafeDocDeviceUser> users)
+        {
+            SafeDocResponse response = GetAllUsers();
+            users = _connection.ReadResponseList<SafeDocDeviceUser>(response);
+            return response;
+        }
+
         public SafeDocResponse GetUser(string userId)
         {
             return Send(SafeDocCommandType.GetUser, User(userId));
+        }
+
+        public SafeDocResponse GetFingerprintUserId()
+        {
+            return Send(SafeDocCommandType.GetUserId);
+        }
+
+        public SafeDocResponse GetFingerprintUserId(out int userId)
+        {
+            SafeDocResponse response = GetFingerprintUserId();
+            SafeDocDeviceUser user = _connection.ReadResponseData<SafeDocDeviceUser>(response);
+            userId = user.UserId;
+            return response;
+        }
+
+        public SafeDocResponse SavePerson(
+            string userId,
+            string userName,
+            string password,
+            long expirationTimestamp,
+            bool useUsbFlash,
+            int usbUseCount
+        )
+        {
+            return Send(
+                SafeDocCommandType.SavePerson,
+                User(userId),
+                new { passName = userName },
+                new { passValue = password },
+                new { expirationTimestamp = expirationTimestamp },
+                new { useUsbFlash = useUsbFlash },
+                new { usbUseCount = usbUseCount }
+            );
+        }
+
+        public SafeDocResponse GetAllSettings()
+        {
+            return Send(
+                SafeDocCommandType.GetAllSettings,
+                _settingsTimeoutMilliseconds
+            );
+        }
+
+        public SafeDocResponse GetAllSettings(out SafeDocDeviceSettings settings)
+        {
+            SafeDocResponse response = GetAllSettings();
+            settings = _connection.ReadDeviceSettings(response);
+            return response;
+        }
+
+        public SafeDocResponse CheckToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                throw new ArgumentException("توکن نمی‌تواند خالی باشد.", nameof(token));
+            }
+
+            return Send(SafeDocCommandType.CheckToken, new { token = token.Trim() });
         }
 
         public SafeDocResponse SetEnterStatus(bool enabled)
@@ -177,9 +264,22 @@ namespace SafeDoc.Business
             return Send(SafeDocCommandType.GetHidStatusAfterExpiration);
         }
 
+        public SafeDocResponse SetBuzzerStatus(bool enabled)
+        {
+            return Send(
+                SafeDocCommandType.SetBuzzerStatus,
+                new { buzzerStatus = enabled }
+            );
+        }
+
+        public SafeDocResponse GetBuzzerStatus()
+        {
+            return Send(SafeDocCommandType.GetBuzzerStatus);
+        }
+
         private SafeDocResponse Send(SafeDocCommandType type, params object[] data)
         {
-            return Send(type, 10000, data);
+            return Send(type, _commandTimeoutMilliseconds, data);
         }
 
         private SafeDocResponse Send(SafeDocCommandType type, int timeoutMilliseconds, params object[] data)
@@ -193,12 +293,22 @@ namespace SafeDoc.Business
             command.commandType = type;
             command.requiredData = new List<object>(data);
 
-            if (type == SafeDocCommandType.FingerEnroll)
+            if (
+                type == SafeDocCommandType.FingerEnroll
+                || type == SafeDocCommandType.GetUserId
+            )
             {
-                timeoutMilliseconds = 60000;
+                timeoutMilliseconds = _fingerprintEnrollTimeoutMilliseconds;
             }
 
-            return _connection.SendCommand(command, timeoutMilliseconds);
+            try
+            {
+                return _connection.SendCommand(command, timeoutMilliseconds);
+            }
+            finally
+            {
+                Thread.Sleep(_commandIntervalMilliseconds);
+            }
         }
 
         private static object User(string userId)

@@ -1,5 +1,7 @@
 using System;
 using System.Windows.Forms;
+using SafeDoc.Business;
+using SafeDoc.Models;
 
 namespace SafeDoc.UI
 {
@@ -7,6 +9,8 @@ namespace SafeDoc.UI
     {
         private bool _isEnglish;
         private bool _isLoginLoading;
+        private string _accessToken;
+        private DeviceConnectionService _verifiedConnection;
 
         public FormLogin()
         {
@@ -16,6 +20,8 @@ namespace SafeDoc.UI
         private void FormLogin_Load(object sender, EventArgs e)
         {
             AppSettings.CurrentLanguage = AppLanguage.Persian;
+            txtAccessKey.Text = AccessKeyStorage.Load();
+            chkRememberAccessKey.Checked = string.IsNullOrWhiteSpace(txtAccessKey.Text) == false;
         }
 
         private void ToggleLanguage()
@@ -51,23 +57,102 @@ namespace SafeDoc.UI
 
         private void ContinueLoginLoading()
         {
-            int nextValue = loginProgressBar.Value + 20;
-            if (nextValue < 100)
+            int nextValue = loginProgressBar.Value + 5;
+            if (nextValue > 85)
             {
-                loginProgressBar.Value = nextValue;
-                return;
+                nextValue = 85;
             }
 
+            loginProgressBar.Value = nextValue;
+        }
+
+        private void OpenMainForm()
+        {
             loginProgressBar.Value = 100;
             loginLoadingTimer.Stop();
             Hide();
 
-            using (FormMain mainForm = new FormMain())
+            DeviceConnectionService verifiedConnection = _verifiedConnection;
+            _verifiedConnection = null;
+            using (FormMain mainForm = new FormMain(verifiedConnection))
             {
                 mainForm.ShowDialog();
             }
 
             Close();
+        }
+
+        private void StopLoginLoading(string message)
+        {
+            loginLoadingTimer.Stop();
+            _isLoginLoading = false;
+            btnLogin.Enabled = true;
+            btnLanguage.Enabled = true;
+            loginProgressBar.Visible = false;
+            lblLoading.Text = message;
+            lblLoading.Visible = true;
+        }
+
+        private void ShowLoginMessage(string message)
+        {
+            MessageBox.Show(
+                "⚠ ورود به دستگاه انجام نشد."
+                    + Environment.NewLine
+                    + Environment.NewLine
+                    + message,
+                "بررسی ورود",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
+        }
+
+        private string CheckDeviceToken()
+        {
+            string approvedPort = DevicePortFinder.FindApprovedDevicePort();
+            if (string.IsNullOrWhiteSpace(approvedPort))
+            {
+                return "دستگاه مورد نظر پیدا نشد.";
+            }
+
+            DeviceConnectionService connection = null;
+            try
+            {
+                connection = new DeviceConnectionService(approvedPort, DeviceConfiguration.BaudRate);
+                connection.Connect();
+
+                SafeDocOperations operations = new SafeDocOperations(
+                    connection,
+                    DeviceConfiguration.CommandTimeoutMilliseconds,
+                    DeviceConfiguration.SettingsTimeoutMilliseconds,
+                    DeviceConfiguration.FingerprintEnrollTimeoutMilliseconds,
+                    DeviceConfiguration.CommandIntervalMilliseconds
+                );
+                SafeDocResponse response = operations.CheckToken(_accessToken);
+                if (response.isSuccess)
+                {
+                    _verifiedConnection = connection;
+                    connection = null;
+                    return string.Empty;
+                }
+
+                if (response.responseStatusCode == 4)
+                {
+                    return "توکن دستگاه نادرست است.";
+                }
+
+                return "بررسی توکن ناموفق بود. " + response.responseStatusCode;
+            }
+            catch (Exception exception)
+            {
+                return "بررسی توکن انجام نشد: " + exception.Message;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Dispose();
+                }
+            }
         }
 
         private void ApplyEnglishText()
@@ -103,7 +188,34 @@ namespace SafeDoc.UI
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
+            _accessToken = txtAccessKey.Text.Trim();
+            if (string.IsNullOrWhiteSpace(_accessToken))
+            {
+                lblLoading.Text = "کلید ورود را وارد کنید.";
+                lblLoading.Visible = true;
+                ShowLoginMessage("کلید ورود یا رمز دستگاه را وارد کنید.");
+                return;
+            }
+
             StartLoginLoading();
+            string tokenError = CheckDeviceToken();
+            if (string.IsNullOrWhiteSpace(tokenError) == false)
+            {
+                StopLoginLoading(tokenError);
+                ShowLoginMessage(tokenError);
+                return;
+            }
+
+            if (chkRememberAccessKey.Checked)
+            {
+                AccessKeyStorage.Save(_accessToken);
+            }
+            else
+            {
+                AccessKeyStorage.Clear();
+            }
+
+            OpenMainForm();
         }
 
         private void loginLoadingTimer_Tick(object sender, EventArgs e)

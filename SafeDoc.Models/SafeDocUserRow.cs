@@ -43,5 +43,17 @@ namespace SafeDoc.Models
             get;
             set;
         }
+
+        public int UsbUseCount
+        {
+            get;
+            set;
+        }
+
+        public int UsbUsedTimes
+        {
+            get;
+            set;
+        }
     }
 }

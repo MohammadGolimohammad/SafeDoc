@@ -46,6 +46,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SafeDocCommand.cs" />
     <Compile Include="SafeDocCommandType.cs" />
+    <Compile Include="SafeDocDeviceSettings.cs" />
+    <Compile Include="SafeDocDeviceUser.cs" />
     <Compile Include="SafeDocUserRow.cs" />
     <Compile Include="PasswordInfo.cs" />
     <Compile Include="SafeDocResponse.cs" />

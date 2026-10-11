@@ -12,6 +12,7 @@ namespace SafeDoc.UI
         private System.Windows.Forms.Label lblLoading;
         private System.Windows.Forms.ProgressBar loginProgressBar;
         private System.Windows.Forms.Timer loginLoadingTimer;
+        private System.Windows.Forms.CheckBox chkRememberAccessKey;
 
         protected override void Dispose(bool disposing)
         {
@@ -35,6 +36,7 @@ namespace SafeDoc.UI
             this.lblLoading = new System.Windows.Forms.Label();
             this.loginProgressBar = new System.Windows.Forms.ProgressBar();
             this.loginLoadingTimer = new System.Windows.Forms.Timer(this.components);
+            this.chkRememberAccessKey = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // lblTitle
@@ -82,7 +84,19 @@ namespace SafeDoc.UI
             this.txtAccessKey.Size = new System.Drawing.Size(350, 26);
             this.txtAccessKey.TabIndex = 3;
             this.txtAccessKey.UseSystemPasswordChar = true;
-            // 
+            //
+            // chkRememberAccessKey
+            //
+            this.chkRememberAccessKey.AutoSize = true;
+            this.chkRememberAccessKey.Font = new System.Drawing.Font("Shabnam FD", 8.5F);
+            this.chkRememberAccessKey.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.chkRememberAccessKey.Location = new System.Drawing.Point(45, 179);
+            this.chkRememberAccessKey.Name = "chkRememberAccessKey";
+            this.chkRememberAccessKey.Size = new System.Drawing.Size(124, 20);
+            this.chkRememberAccessKey.TabIndex = 4;
+            this.chkRememberAccessKey.Text = "یادآوری کلید ورود";
+            this.chkRememberAccessKey.UseVisualStyleBackColor = true;
+            //
             // btnLogin
             // 
             this.btnLogin.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(99)))), ((int)(((byte)(235)))));
@@ -93,7 +107,7 @@ namespace SafeDoc.UI
             this.btnLogin.Location = new System.Drawing.Point(45, 204);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(350, 39);
-            this.btnLogin.TabIndex = 4;
+            this.btnLogin.TabIndex = 5;
             this.btnLogin.Text = "ورود به مدیریت دستگاه";
             this.btnLogin.UseVisualStyleBackColor = false;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
@@ -108,7 +122,7 @@ namespace SafeDoc.UI
             this.btnLanguage.Location = new System.Drawing.Point(25, 25);
             this.btnLanguage.Name = "btnLanguage";
             this.btnLanguage.Size = new System.Drawing.Size(45, 28);
-            this.btnLanguage.TabIndex = 5;
+            this.btnLanguage.TabIndex = 6;
             this.btnLanguage.Text = "EN";
             this.btnLanguage.UseVisualStyleBackColor = false;
             this.btnLanguage.Click += new System.EventHandler(this.btnLanguage_Click);
@@ -120,7 +134,7 @@ namespace SafeDoc.UI
             this.lblLoading.Location = new System.Drawing.Point(45, 251);
             this.lblLoading.Name = "lblLoading";
             this.lblLoading.Size = new System.Drawing.Size(350, 20);
-            this.lblLoading.TabIndex = 6;
+            this.lblLoading.TabIndex = 7;
             this.lblLoading.Text = "در حال آماده‌سازی مدیریت دستگاه...";
             this.lblLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblLoading.Visible = false;
@@ -131,7 +145,7 @@ namespace SafeDoc.UI
             this.loginProgressBar.Name = "loginProgressBar";
             this.loginProgressBar.Size = new System.Drawing.Size(350, 8);
             this.loginProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
-            this.loginProgressBar.TabIndex = 7;
+            this.loginProgressBar.TabIndex = 8;
             this.loginProgressBar.Visible = false;
             // 
             // loginLoadingTimer
@@ -150,6 +164,7 @@ namespace SafeDoc.UI
             this.Controls.Add(this.lblLoading);
             this.Controls.Add(this.btnLanguage);
             this.Controls.Add(this.btnLogin);
+            this.Controls.Add(this.chkRememberAccessKey);
             this.Controls.Add(this.txtAccessKey);
             this.Controls.Add(this.lblActiveKey);
             this.Controls.Add(this.lblSubtitle);

@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using SafeDoc.Models;
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace SafeDoc.Device
@@ -18,7 +19,7 @@ namespace SafeDoc.Device
         private string _completeResponseJson;
         private Exception _communicationError;
 
-        public SafeDocClient(string portName, int baudRate = 115200)
+        public SafeDocClient(string portName, int baudRate)
         {
             _serialPort = new SerialPortManager(portName, baudRate);
             _serialPort.DataReceived += OnSerialDataReceived;
@@ -30,6 +31,14 @@ namespace SafeDoc.Device
             get
             {
                 return _serialPort.IsConnected;
+            }
+        }
+
+        public string PortName
+        {
+            get
+            {
+                return _serialPort.PortName;
             }
         }
 
@@ -47,7 +56,7 @@ namespace SafeDoc.Device
             _serialPort.Disconnect();
         }
 
-        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 10000)
+        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds)
         {
             if (command == null)
             {
@@ -59,6 +68,7 @@ namespace SafeDoc.Device
                 PrepareForNextResponse();
 
                 string commandJson = JsonConvert.SerializeObject(command);
+                _serialPort.ClearReceivedData();
                 CommandSent?.Invoke(this, commandJson);
                 _serialPort.Send(commandJson);
 
@@ -66,9 +76,94 @@ namespace SafeDoc.Device
 
                 lock (_responseLock)
                 {
-                    return JsonConvert.DeserializeObject<SafeDocResponse>(_completeResponseJson);
+                    SafeDocResponse response = JsonConvert.DeserializeObject<SafeDocResponse>(
+                        _completeResponseJson
+                    );
+                    if (response == null)
+                    {
+                        throw new InvalidOperationException("پاسخ دستگاه به مدل پاسخ قابل تبدیل نیست.");
+                    }
+
+                    return response;
                 }
             }
+        }
+
+        public T ReadResponseData<T>(SafeDocResponse response)
+            where T : class, new()
+        {
+            if (response == null || response.resultData == null || response.resultData.Count == 0)
+            {
+                return new T();
+            }
+
+            string dataJson = JsonConvert.SerializeObject(response.resultData[0]);
+            return JsonConvert.DeserializeObject<T>(dataJson) ?? new T();
+        }
+
+        public SafeDocDeviceSettings ReadDeviceSettings(SafeDocResponse response)
+        {
+            SafeDocDeviceSettings settings = new SafeDocDeviceSettings();
+            if (response == null || response.resultData == null)
+            {
+                return settings;
+            }
+
+            foreach (object result in response.resultData)
+            {
+                string resultJson = JsonConvert.SerializeObject(result);
+                SafeDocDeviceSettings current = JsonConvert.DeserializeObject<SafeDocDeviceSettings>(
+                    resultJson
+                );
+                if (current == null)
+                {
+                    continue;
+                }
+
+                if (resultJson.IndexOf("\"time\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.Time = current.Time;
+                }
+
+                if (resultJson.IndexOf("\"date\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.Date = current.Date;
+                }
+
+                if (resultJson.IndexOf("\"enterStatus\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.EnterStatus = current.EnterStatus;
+                }
+
+                if (resultJson.IndexOf("\"usbConnectionTimeoutValue\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.UsbConnectionTimeoutValue = current.UsbConnectionTimeoutValue;
+                }
+
+                if (resultJson.IndexOf("\"HidStatusAfterExpiration\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.HidStatusAfterExpiration = current.HidStatusAfterExpiration;
+                }
+
+                if (resultJson.IndexOf("\"buzzerStatus\"", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    settings.BuzzerStatus = current.BuzzerStatus;
+                }
+            }
+
+            return settings;
+        }
+
+        public System.Collections.Generic.List<T> ReadResponseList<T>(SafeDocResponse response)
+        {
+            if (response == null || response.resultData == null)
+            {
+                return new System.Collections.Generic.List<T>();
+            }
+
+            string dataJson = JsonConvert.SerializeObject(response.resultData);
+            return JsonConvert.DeserializeObject<System.Collections.Generic.List<T>>(dataJson)
+                ?? new System.Collections.Generic.List<T>();
         }
 
         private void PrepareForNextResponse()
@@ -112,109 +207,126 @@ namespace SafeDoc.Device
             lock (_responseLock)
             {
                 _receivedText.Append(receivedPart);
-
-                string json = FindCompleteResponseJson(_receivedText.ToString());
-                if (json == null)
+                string receivedJson = _receivedText.ToString().Trim('\0', ' ', '\r', '\n', '\t');
+                receivedJson = NormalizeSettingsResponse(receivedJson);
+                receivedJson = NormalizeFingerprintUserResponse(receivedJson);
+                if (IsCompleteJson(receivedJson) == false)
                 {
                     return;
                 }
 
-                _completeResponseJson = json;
+                JObject responseObject;
+                try
+                {
+                    responseObject = JObject.Parse(receivedJson);
+                }
+                catch (JsonReaderException)
+                {
+                    return;
+                }
+
+                if (responseObject["isSuccess"] == null || responseObject["responseStatusCode"] == null)
+                {
+                    return;
+                }
+
+                _completeResponseJson = responseObject.ToString();
                 _responseReady.Set();
             }
         }
 
-        private static string FindCompleteResponseJson(string text)
+        private static string NormalizeSettingsResponse(string receivedJson)
         {
-            int startIndex = 0;
-            while (startIndex < text.Length)
+            if (
+                receivedJson.IndexOf("\"time\"", StringComparison.OrdinalIgnoreCase) < 0
+                || receivedJson.IndexOf("\"date\"", StringComparison.OrdinalIgnoreCase) < 0
+            )
             {
-                int firstBrace = text.IndexOf('{', startIndex);
-                if (firstBrace < 0)
-                {
-                    return null;
-                }
-
-                int endIndex = FindJsonObjectEnd(text, firstBrace);
-                if (endIndex < 0)
-                {
-                    return null;
-                }
-
-                string json = text.Substring(firstBrace, endIndex - firstBrace + 1);
-                if (IsDeviceResponseJson(json))
-                {
-                    return json;
-                }
-
-                startIndex = endIndex + 1;
+                return receivedJson;
             }
 
-            return null;
+            string normalizedJson = Regex.Replace(receivedJson, @"\[\s*\{\s*\{", "[{");
+            normalizedJson = Regex.Replace(
+                normalizedJson,
+                @"\}\s*,\s*\{\s*\""date\""\s*:\s*(\""[^\""\r\n]*\"")\s*\}\s*,",
+                ", \"date\": $1,"
+            );
+
+            return normalizedJson;
         }
 
-        private static int FindJsonObjectEnd(string text, int firstBrace)
+        private static string NormalizeFingerprintUserResponse(string receivedJson)
         {
-            int openBraces = 0;
-            bool isInsideString = false;
-            bool isEscaped = false;
-
-            for (int index = firstBrace; index < text.Length; index++)
+            if (receivedJson.IndexOf("\"userId\"", StringComparison.OrdinalIgnoreCase) < 0)
             {
-                char currentCharacter = text[index];
+                return receivedJson;
+            }
 
-                if (isInsideString)
+            return Regex.Replace(
+                receivedJson,
+                @"(""resultData""\s*:\s*)\[\s*""userId""\s*:\s*(-?\d+)\s*\]",
+                "$1[{\"userId\": $2}]"
+            );
+        }
+
+        private static bool IsCompleteJson(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text) || text[0] != '{' || text[text.Length - 1] != '}')
+            {
+                return false;
+            }
+
+            int openBraces = 0;
+            bool insideText = false;
+            bool escapedCharacter = false;
+
+            foreach (char character in text)
+            {
+                if (insideText)
                 {
-                    if (isEscaped)
+                    if (escapedCharacter)
                     {
-                        isEscaped = false;
+                        escapedCharacter = false;
+                        continue;
                     }
-                    else if (currentCharacter == '\\')
+
+                    if (character == '\\')
                     {
-                        isEscaped = true;
+                        escapedCharacter = true;
+                        continue;
                     }
-                    else if (currentCharacter == '"')
+
+                    if (character == '"')
                     {
-                        isInsideString = false;
+                        insideText = false;
                     }
 
                     continue;
                 }
 
-                if (currentCharacter == '"')
+                if (character == '"')
                 {
-                    isInsideString = true;
+                    insideText = true;
+                    continue;
                 }
-                else if (currentCharacter == '{')
+
+                if (character == '{')
                 {
                     openBraces++;
+                    continue;
                 }
-                else if (currentCharacter == '}')
+
+                if (character == '}')
                 {
                     openBraces--;
-
-                    if (openBraces == 0)
+                    if (openBraces < 0)
                     {
-                        return index;
+                        return false;
                     }
                 }
             }
 
-            return -1;
-        }
-
-        private static bool IsDeviceResponseJson(string json)
-        {
-            try
-            {
-                JObject responseObject = JObject.Parse(json);
-                return responseObject["isSuccess"] != null
-                    && responseObject["responseStatusCode"] != null;
-            }
-            catch (JsonReaderException)
-            {
-                return false;
-            }
+            return openBraces == 0 && insideText == false;
         }
 
         private void OnSerialError(object sender, string errorMessage)

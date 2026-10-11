@@ -30,7 +30,7 @@ namespace SafeDoc.Device
 
         public SerialPortManager(
             string portName,
-            int baudRate = 115200,
+            int baudRate,
             Parity parity = Parity.None,
             int dataBits = 8,
             StopBits stopBits = StopBits.One
@@ -39,6 +39,7 @@ namespace SafeDoc.Device
             _serialPort = new SerialPort(portName, baudRate, parity, dataBits, stopBits);
 
             _serialPort.Encoding = Encoding.UTF8;
+            _serialPort.Handshake = Handshake.None;
 
             _serialPort.DataReceived += SerialPort_DataReceived;
         }
@@ -91,6 +92,16 @@ namespace SafeDoc.Device
             }
 
             _serialPort.Write(data);
+        }
+
+        public void ClearReceivedData()
+        {
+            if (IsConnected == false)
+            {
+                return;
+            }
+
+            _serialPort.DiscardInBuffer();
         }
 
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)

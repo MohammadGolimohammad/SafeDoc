@@ -12,6 +12,9 @@ namespace SafeDoc.UI
         private System.Windows.Forms.StatusStrip operationStatusStrip;
         private System.Windows.Forms.ToolStripStatusLabel lblOperationProgress;
         private System.Windows.Forms.ToolStripProgressBar operationProgressBar;
+        private System.Windows.Forms.Label lblOperationProgressText;
+        private System.Windows.Forms.ProgressBar operationProgressBarLarge;
+        private System.Windows.Forms.RichTextBox txtOperationLog;
         private System.Windows.Forms.Label lblConnection;
         private System.Windows.Forms.Label lblCurrentDeviceTime;
         private System.Windows.Forms.Label lblPasswordStrength;
@@ -20,10 +23,12 @@ namespace SafeDoc.UI
         private System.Windows.Forms.TextBox txtFingerprintUserId, txtFingerprintPasswordName, txtFingerprintPassword, txtPasswordUserId, txtPasswordName, txtPasswordValue, txtUsbTimeout;
         private System.Windows.Forms.MaskedTextBox txtDeviceTime, txtExpirationTime;
         private Atf.UI.DateTimeSelector deviceDateSelector, expirationDateSelector;
-        private System.Windows.Forms.Button btnEnrollFingerprint, btnCancelUser, btnDeleteAllFingerprints, btnAddPassword, btnDeletePassword, btnDeleteAllPasswords, btnShowPasswords, btnSetDateTime, btnSetExpiration, btnGetExpiration, btnSetUsb;
-        private System.Windows.Forms.Button btnEnterStatusToggle, btnHidAfterExpirationToggle;
+        private System.Windows.Forms.Button btnEnrollFingerprint, btnCancelUser, btnIdentifyFingerprint, btnDeleteAllFingerprints, btnAddPassword, btnDeletePassword, btnDeleteAllPasswords, btnShowPasswords, btnSetDateTime, btnSetExpiration, btnGetExpiration, btnSetUsb;
+        private System.Windows.Forms.Button btnEnterStatusToggle, btnHidAfterExpirationToggle, btnBuzzerStatusToggle;
         private System.Windows.Forms.Button btnToggleFingerprintPassword;
         private System.Windows.Forms.Panel pnlPasswordStrengthWeak, pnlPasswordStrengthMedium, pnlPasswordStrengthStrong;
+        private System.Windows.Forms.Label lblUsbUseCount;
+        private System.Windows.Forms.NumericUpDown nudUsbUseCount;
         private System.Windows.Forms.DataGridView dgvUsers;
         private System.Windows.Forms.Button btnSaveSelectedUserPassword;
         private System.Windows.Forms.Button btnGetSelectedUserPasswords;
@@ -39,8 +44,8 @@ namespace SafeDoc.UI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
             this.connectionWatchTimer = new System.Windows.Forms.Timer(this.components);
             this.deviceClockTimer = new System.Windows.Forms.Timer(this.components);
             this.pnlMain = new System.Windows.Forms.Panel();
@@ -48,7 +53,11 @@ namespace SafeDoc.UI
             this.operationStatusStrip = new System.Windows.Forms.StatusStrip();
             this.lblOperationProgress = new System.Windows.Forms.ToolStripStatusLabel();
             this.operationProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.txtOperationLog = new System.Windows.Forms.RichTextBox();
+            this.lblOperationProgressText = new System.Windows.Forms.Label();
+            this.operationProgressBarLarge = new System.Windows.Forms.ProgressBar();
             this.lblConnection = new System.Windows.Forms.Label();
+            this.chkClearSavedAccessKey = new System.Windows.Forms.CheckBox();
             this.groupFingerprint = new System.Windows.Forms.GroupBox();
             this.lblPasswordStrength = new System.Windows.Forms.Label();
             this.pnlPasswordStrengthWeak = new System.Windows.Forms.Panel();
@@ -56,6 +65,8 @@ namespace SafeDoc.UI
             this.pnlPasswordStrengthStrong = new System.Windows.Forms.Panel();
             this.btnToggleFingerprintPassword = new System.Windows.Forms.Button();
             this.chkFlashPermission = new System.Windows.Forms.CheckBox();
+            this.lblUsbUseCount = new System.Windows.Forms.Label();
+            this.nudUsbUseCount = new System.Windows.Forms.NumericUpDown();
             this.fpPasswordName = new System.Windows.Forms.Label();
             this.fpPassword = new System.Windows.Forms.Label();
             this.txtFingerprintPasswordName = new System.Windows.Forms.TextBox();
@@ -65,6 +76,7 @@ namespace SafeDoc.UI
             this.expirationDateSelector = new Atf.UI.DateTimeSelector();
             this.txtExpirationTime = new System.Windows.Forms.MaskedTextBox();
             this.btnEnrollFingerprint = new System.Windows.Forms.Button();
+            this.btnIdentifyFingerprint = new System.Windows.Forms.Button();
             this.groupSettings = new System.Windows.Forms.GroupBox();
             this.date = new System.Windows.Forms.Label();
             this.usb = new System.Windows.Forms.Label();
@@ -77,9 +89,22 @@ namespace SafeDoc.UI
             this.deviceDateSelector = new Atf.UI.DateTimeSelector();
             this.lblCurrentDeviceTime = new System.Windows.Forms.Label();
             this.btnHidAfterExpirationToggle = new System.Windows.Forms.Button();
+            this.btnBuzzerStatusToggle = new System.Windows.Forms.Button();
             this.currentTimeTitle = new System.Windows.Forms.Label();
             this.groupUsers = new System.Windows.Forms.GroupBox();
             this.dgvUsers = new System.Windows.Forms.DataGridView();
+            this.ColumnUserId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnUserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnPass = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnExpireDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnExpireTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnFlashPermission = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.ColumnUsbUseCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnUsbUsedTimes = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColumnEdit = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ColumnDelete = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ColumnFingerprint = new System.Windows.Forms.DataGridViewButtonColumn();
+            this.ColumnFingerprintStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnSaveSelectedUserPassword = new System.Windows.Forms.Button();
             this.btnGetSelectedUserPasswords = new System.Windows.Forms.Button();
             this.fpId = new System.Windows.Forms.Label();
@@ -103,20 +128,11 @@ namespace SafeDoc.UI
             this.btnDeletePassword = new System.Windows.Forms.Button();
             this.btnShowPasswords = new System.Windows.Forms.Button();
             this.btnDeleteAllPasswords = new System.Windows.Forms.Button();
-            this.ColumnUserId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnUserName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnPass = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnExpireDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnExpireTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.ColumnFlashPermission = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.ColumnEdit = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnDelete = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnFingerprint = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.ColumnFingerprintStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pnlMain.SuspendLayout();
             this.connection.SuspendLayout();
             this.operationStatusStrip.SuspendLayout();
             this.groupFingerprint.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudUsbUseCount)).BeginInit();
             this.groupSettings.SuspendLayout();
             this.groupUsers.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvUsers)).BeginInit();
@@ -139,24 +155,26 @@ namespace SafeDoc.UI
             // 
             this.pnlMain.AutoScroll = true;
             this.pnlMain.Controls.Add(this.connection);
-            this.pnlMain.Controls.Add(this.lblConnection);
             this.pnlMain.Controls.Add(this.groupFingerprint);
             this.pnlMain.Controls.Add(this.groupSettings);
             this.pnlMain.Controls.Add(this.groupUsers);
             this.pnlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlMain.Location = new System.Drawing.Point(0, 0);
             this.pnlMain.Name = "pnlMain";
-            this.pnlMain.Size = new System.Drawing.Size(946, 566);
+            this.pnlMain.Size = new System.Drawing.Size(946, 689);
             this.pnlMain.TabIndex = 0;
             // 
             // connection
             // 
             this.connection.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
             this.connection.Controls.Add(this.operationStatusStrip);
+            this.connection.Controls.Add(this.txtOperationLog);
+            this.connection.Controls.Add(this.lblOperationProgressText);
+            this.connection.Controls.Add(this.operationProgressBarLarge);
             this.connection.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
             this.connection.Location = new System.Drawing.Point(12, 12);
             this.connection.Name = "connection";
-            this.connection.Size = new System.Drawing.Size(922, 51);
+            this.connection.Size = new System.Drawing.Size(922, 176);
             this.connection.TabIndex = 1;
             this.connection.TabStop = false;
             this.connection.Text = "اتصال به دستگاه";
@@ -164,7 +182,7 @@ namespace SafeDoc.UI
             // operationStatusStrip
             // 
             this.operationStatusStrip.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
-            this.operationStatusStrip.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.operationStatusStrip.Dock = System.Windows.Forms.DockStyle.None;
             this.operationStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.lblOperationProgress,
             this.operationProgressBar});
@@ -173,8 +191,9 @@ namespace SafeDoc.UI
             this.operationStatusStrip.Name = "operationStatusStrip";
             this.operationStatusStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
             this.operationStatusStrip.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.operationStatusStrip.Size = new System.Drawing.Size(916, 28);
+            this.operationStatusStrip.Size = new System.Drawing.Size(649, 28);
             this.operationStatusStrip.TabIndex = 1;
+            this.operationStatusStrip.Visible = false;
             // 
             // lblOperationProgress
             // 
@@ -189,18 +208,74 @@ namespace SafeDoc.UI
             // 
             this.operationProgressBar.Name = "operationProgressBar";
             this.operationProgressBar.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
-            this.operationProgressBar.Size = new System.Drawing.Size(200, 16);
+            this.operationProgressBar.Size = new System.Drawing.Size(200, 22);
             this.operationProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            // 
+            // txtOperationLog
+            // 
+            this.txtOperationLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOperationLog.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.txtOperationLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtOperationLog.Font = new System.Drawing.Font("Shabnam FD", 8.25F);
+            this.txtOperationLog.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.txtOperationLog.Location = new System.Drawing.Point(14, 74);
+            this.txtOperationLog.Name = "txtOperationLog";
+            this.txtOperationLog.ReadOnly = true;
+            this.txtOperationLog.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.txtOperationLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            this.txtOperationLog.Size = new System.Drawing.Size(894, 96);
+            this.txtOperationLog.TabIndex = 4;
+            this.txtOperationLog.Text = "";
+            // 
+            // lblOperationProgressText
+            // 
+            this.lblOperationProgressText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblOperationProgressText.AutoEllipsis = true;
+            this.lblOperationProgressText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            this.lblOperationProgressText.Location = new System.Drawing.Point(14, 20);
+            this.lblOperationProgressText.Name = "lblOperationProgressText";
+            this.lblOperationProgressText.Size = new System.Drawing.Size(894, 20);
+            this.lblOperationProgressText.TabIndex = 3;
+            this.lblOperationProgressText.Text = "آماده انجام عملیات";
+            this.lblOperationProgressText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // operationProgressBarLarge
+            // 
+            this.operationProgressBarLarge.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.operationProgressBarLarge.Location = new System.Drawing.Point(14, 43);
+            this.operationProgressBarLarge.MarqueeAnimationSpeed = 30;
+            this.operationProgressBarLarge.Name = "operationProgressBarLarge";
+            this.operationProgressBarLarge.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.operationProgressBarLarge.RightToLeftLayout = true;
+            this.operationProgressBarLarge.Size = new System.Drawing.Size(894, 22);
+            this.operationProgressBarLarge.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.operationProgressBarLarge.TabIndex = 2;
+            this.operationProgressBarLarge.Value = 100;
             // 
             // lblConnection
             // 
             this.lblConnection.AutoSize = true;
-            this.lblConnection.Location = new System.Drawing.Point(737, 544);
+            this.lblConnection.Location = new System.Drawing.Point(677, 118);
             this.lblConnection.Name = "lblConnection";
             this.lblConnection.Size = new System.Drawing.Size(194, 16);
             this.lblConnection.TabIndex = 7;
             this.lblConnection.Text = "وضعیت دستگاه تأییدشده: ● پیدا نشد";
             this.lblConnection.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // chkClearSavedAccessKey
+            // 
+            this.chkClearSavedAccessKey.AutoSize = true;
+            this.chkClearSavedAccessKey.Location = new System.Drawing.Point(489, 116);
+            this.chkClearSavedAccessKey.Name = "chkClearSavedAccessKey";
+            this.chkClearSavedAccessKey.Size = new System.Drawing.Size(152, 20);
+            this.chkClearSavedAccessKey.TabIndex = 8;
+            this.chkClearSavedAccessKey.Text = "حذف کلید ورود ذخیره‌شده";
+            this.chkClearSavedAccessKey.UseVisualStyleBackColor = true;
+            this.chkClearSavedAccessKey.CheckedChanged += new System.EventHandler(this.chkClearSavedAccessKey_CheckedChanged);
             // 
             // groupFingerprint
             // 
@@ -211,6 +286,8 @@ namespace SafeDoc.UI
             this.groupFingerprint.Controls.Add(this.pnlPasswordStrengthStrong);
             this.groupFingerprint.Controls.Add(this.btnToggleFingerprintPassword);
             this.groupFingerprint.Controls.Add(this.chkFlashPermission);
+            this.groupFingerprint.Controls.Add(this.lblUsbUseCount);
+            this.groupFingerprint.Controls.Add(this.nudUsbUseCount);
             this.groupFingerprint.Controls.Add(this.fpPasswordName);
             this.groupFingerprint.Controls.Add(this.fpPassword);
             this.groupFingerprint.Controls.Add(this.txtFingerprintPasswordName);
@@ -220,8 +297,9 @@ namespace SafeDoc.UI
             this.groupFingerprint.Controls.Add(this.expirationDateSelector);
             this.groupFingerprint.Controls.Add(this.txtExpirationTime);
             this.groupFingerprint.Controls.Add(this.btnEnrollFingerprint);
+            this.groupFingerprint.Controls.Add(this.btnIdentifyFingerprint);
             this.groupFingerprint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.groupFingerprint.Location = new System.Drawing.Point(12, 69);
+            this.groupFingerprint.Location = new System.Drawing.Point(12, 194);
             this.groupFingerprint.Name = "groupFingerprint";
             this.groupFingerprint.Size = new System.Drawing.Size(922, 100);
             this.groupFingerprint.TabIndex = 1;
@@ -231,7 +309,7 @@ namespace SafeDoc.UI
             // lblPasswordStrength
             // 
             this.lblPasswordStrength.AutoSize = true;
-            this.lblPasswordStrength.Location = new System.Drawing.Point(408, 81);
+            this.lblPasswordStrength.Location = new System.Drawing.Point(460, 70);
             this.lblPasswordStrength.Name = "lblPasswordStrength";
             this.lblPasswordStrength.Size = new System.Drawing.Size(65, 16);
             this.lblPasswordStrength.TabIndex = 10;
@@ -240,7 +318,7 @@ namespace SafeDoc.UI
             // pnlPasswordStrengthWeak
             // 
             this.pnlPasswordStrengthWeak.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.pnlPasswordStrengthWeak.Location = new System.Drawing.Point(366, 64);
+            this.pnlPasswordStrengthWeak.Location = new System.Drawing.Point(353, 55);
             this.pnlPasswordStrengthWeak.Name = "pnlPasswordStrengthWeak";
             this.pnlPasswordStrengthWeak.Size = new System.Drawing.Size(32, 7);
             this.pnlPasswordStrengthWeak.TabIndex = 11;
@@ -248,7 +326,7 @@ namespace SafeDoc.UI
             // pnlPasswordStrengthMedium
             // 
             this.pnlPasswordStrengthMedium.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.pnlPasswordStrengthMedium.Location = new System.Drawing.Point(402, 64);
+            this.pnlPasswordStrengthMedium.Location = new System.Drawing.Point(389, 55);
             this.pnlPasswordStrengthMedium.Name = "pnlPasswordStrengthMedium";
             this.pnlPasswordStrengthMedium.Size = new System.Drawing.Size(32, 7);
             this.pnlPasswordStrengthMedium.TabIndex = 12;
@@ -256,7 +334,7 @@ namespace SafeDoc.UI
             // pnlPasswordStrengthStrong
             // 
             this.pnlPasswordStrengthStrong.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
-            this.pnlPasswordStrengthStrong.Location = new System.Drawing.Point(438, 64);
+            this.pnlPasswordStrengthStrong.Location = new System.Drawing.Point(425, 55);
             this.pnlPasswordStrengthStrong.Name = "pnlPasswordStrengthStrong";
             this.pnlPasswordStrengthStrong.Size = new System.Drawing.Size(32, 7);
             this.pnlPasswordStrengthStrong.TabIndex = 13;
@@ -280,13 +358,49 @@ namespace SafeDoc.UI
             // chkFlashPermission
             // 
             this.chkFlashPermission.AutoSize = true;
-            this.chkFlashPermission.Location = new System.Drawing.Point(489, 61);
+            this.chkFlashPermission.Location = new System.Drawing.Point(179, 28);
             this.chkFlashPermission.Name = "chkFlashPermission";
             this.chkFlashPermission.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.chkFlashPermission.Size = new System.Drawing.Size(76, 20);
             this.chkFlashPermission.TabIndex = 8;
             this.chkFlashPermission.Text = "مجوز فلش";
             this.chkFlashPermission.UseVisualStyleBackColor = true;
+            this.chkFlashPermission.CheckedChanged += new System.EventHandler(this.chkFlashPermission_CheckedChanged);
+            // 
+            // lblUsbUseCount
+            // 
+            this.lblUsbUseCount.AutoSize = true;
+            this.lblUsbUseCount.Location = new System.Drawing.Point(79, 29);
+            this.lblUsbUseCount.Name = "lblUsbUseCount";
+            this.lblUsbUseCount.Size = new System.Drawing.Size(94, 16);
+            this.lblUsbUseCount.TabIndex = 15;
+            this.lblUsbUseCount.Text = "دفعات مجاز روزانه:";
+            // 
+            // nudUsbUseCount
+            // 
+            this.nudUsbUseCount.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            this.nudUsbUseCount.ForeColor = System.Drawing.Color.White;
+            this.nudUsbUseCount.Location = new System.Drawing.Point(22, 27);
+            this.nudUsbUseCount.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.nudUsbUseCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudUsbUseCount.Name = "nudUsbUseCount";
+            this.nudUsbUseCount.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.nudUsbUseCount.Size = new System.Drawing.Size(51, 24);
+            this.nudUsbUseCount.TabIndex = 16;
+            this.nudUsbUseCount.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.nudUsbUseCount.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // fpPasswordName
             // 
@@ -340,7 +454,7 @@ namespace SafeDoc.UI
             this.btnCancelUser.ForeColor = System.Drawing.Color.White;
             this.btnCancelUser.Location = new System.Drawing.Point(22, 62);
             this.btnCancelUser.Name = "btnCancelUser";
-            this.btnCancelUser.Size = new System.Drawing.Size(117, 24);
+            this.btnCancelUser.Size = new System.Drawing.Size(96, 24);
             this.btnCancelUser.TabIndex = 6;
             this.btnCancelUser.Text = "انصراف";
             this.btnCancelUser.UseVisualStyleBackColor = false;
@@ -386,18 +500,34 @@ namespace SafeDoc.UI
             this.btnEnrollFingerprint.FlatAppearance.BorderSize = 0;
             this.btnEnrollFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEnrollFingerprint.ForeColor = System.Drawing.Color.White;
-            this.btnEnrollFingerprint.Location = new System.Drawing.Point(145, 62);
+            this.btnEnrollFingerprint.Location = new System.Drawing.Point(124, 62);
             this.btnEnrollFingerprint.Name = "btnEnrollFingerprint";
-            this.btnEnrollFingerprint.Size = new System.Drawing.Size(117, 24);
+            this.btnEnrollFingerprint.Size = new System.Drawing.Size(96, 24);
             this.btnEnrollFingerprint.TabIndex = 5;
             this.btnEnrollFingerprint.Text = "ذخیره";
             this.btnEnrollFingerprint.UseVisualStyleBackColor = false;
             this.btnEnrollFingerprint.Click += new System.EventHandler(this.btnEnrollFingerprint_Click);
             // 
+            // btnIdentifyFingerprint
+            // 
+            this.btnIdentifyFingerprint.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
+            this.btnIdentifyFingerprint.FlatAppearance.BorderSize = 0;
+            this.btnIdentifyFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnIdentifyFingerprint.ForeColor = System.Drawing.Color.White;
+            this.btnIdentifyFingerprint.Location = new System.Drawing.Point(226, 62);
+            this.btnIdentifyFingerprint.Name = "btnIdentifyFingerprint";
+            this.btnIdentifyFingerprint.Size = new System.Drawing.Size(96, 24);
+            this.btnIdentifyFingerprint.TabIndex = 14;
+            this.btnIdentifyFingerprint.Text = "شناسایی";
+            this.btnIdentifyFingerprint.UseVisualStyleBackColor = false;
+            this.btnIdentifyFingerprint.Click += new System.EventHandler(this.btnIdentifyFingerprint_Click);
+            // 
             // groupSettings
             // 
             this.groupSettings.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
             this.groupSettings.Controls.Add(this.date);
+            this.groupSettings.Controls.Add(this.chkClearSavedAccessKey);
+            this.groupSettings.Controls.Add(this.lblConnection);
             this.groupSettings.Controls.Add(this.usb);
             this.groupSettings.Controls.Add(this.btnSetDateTime);
             this.groupSettings.Controls.Add(this.btnEnterStatusToggle);
@@ -408,11 +538,12 @@ namespace SafeDoc.UI
             this.groupSettings.Controls.Add(this.deviceDateSelector);
             this.groupSettings.Controls.Add(this.lblCurrentDeviceTime);
             this.groupSettings.Controls.Add(this.btnHidAfterExpirationToggle);
+            this.groupSettings.Controls.Add(this.btnBuzzerStatusToggle);
             this.groupSettings.Controls.Add(this.currentTimeTitle);
             this.groupSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.groupSettings.Location = new System.Drawing.Point(12, 414);
+            this.groupSettings.Location = new System.Drawing.Point(12, 539);
             this.groupSettings.Name = "groupSettings";
-            this.groupSettings.Size = new System.Drawing.Size(922, 127);
+            this.groupSettings.Size = new System.Drawing.Size(922, 146);
             this.groupSettings.TabIndex = 3;
             this.groupSettings.TabStop = false;
             this.groupSettings.Text = "تنظیمات دستگاه";
@@ -420,7 +551,7 @@ namespace SafeDoc.UI
             // date
             // 
             this.date.AutoSize = true;
-            this.date.Location = new System.Drawing.Point(627, 21);
+            this.date.Location = new System.Drawing.Point(620, 20);
             this.date.Name = "date";
             this.date.Size = new System.Drawing.Size(59, 16);
             this.date.TabIndex = 0;
@@ -531,7 +662,7 @@ namespace SafeDoc.UI
             // lblCurrentDeviceTime
             // 
             this.lblCurrentDeviceTime.AutoSize = true;
-            this.lblCurrentDeviceTime.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(165)))), ((int)(((byte)(250)))));
+            this.lblCurrentDeviceTime.ForeColor = System.Drawing.Color.White;
             this.lblCurrentDeviceTime.Location = new System.Drawing.Point(750, 45);
             this.lblCurrentDeviceTime.Name = "lblCurrentDeviceTime";
             this.lblCurrentDeviceTime.Size = new System.Drawing.Size(95, 16);
@@ -552,6 +683,20 @@ namespace SafeDoc.UI
             this.btnHidAfterExpirationToggle.UseVisualStyleBackColor = false;
             this.btnHidAfterExpirationToggle.Click += new System.EventHandler(this.btnHidAfterExpirationToggle_Click);
             // 
+            // btnBuzzerStatusToggle
+            // 
+            this.btnBuzzerStatusToggle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(85)))), ((int)(((byte)(105)))));
+            this.btnBuzzerStatusToggle.FlatAppearance.BorderSize = 0;
+            this.btnBuzzerStatusToggle.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBuzzerStatusToggle.ForeColor = System.Drawing.Color.White;
+            this.btnBuzzerStatusToggle.Location = new System.Drawing.Point(6, 113);
+            this.btnBuzzerStatusToggle.Name = "btnBuzzerStatusToggle";
+            this.btnBuzzerStatusToggle.Size = new System.Drawing.Size(474, 27);
+            this.btnBuzzerStatusToggle.TabIndex = 14;
+            this.btnBuzzerStatusToggle.Text = "صدای بازر (وضعیت نامشخص)";
+            this.btnBuzzerStatusToggle.UseVisualStyleBackColor = false;
+            this.btnBuzzerStatusToggle.Click += new System.EventHandler(this.btnBuzzerStatusToggle_Click);
+            // 
             // currentTimeTitle
             // 
             this.currentTimeTitle.AutoSize = true;
@@ -566,7 +711,7 @@ namespace SafeDoc.UI
             this.groupUsers.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(31)))), ((int)(((byte)(41)))), ((int)(((byte)(55)))));
             this.groupUsers.Controls.Add(this.dgvUsers);
             this.groupUsers.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            this.groupUsers.Location = new System.Drawing.Point(12, 175);
+            this.groupUsers.Location = new System.Drawing.Point(12, 300);
             this.groupUsers.Name = "groupUsers";
             this.groupUsers.Size = new System.Drawing.Size(922, 233);
             this.groupUsers.TabIndex = 4;
@@ -581,14 +726,14 @@ namespace SafeDoc.UI
             this.dgvUsers.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvUsers.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
             this.dgvUsers.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Shabnam FD", 9F);
-            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvUsers.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(65)))), ((int)(((byte)(85)))));
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("Shabnam FD", 9F);
+            dataGridViewCellStyle9.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvUsers.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.dgvUsers.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColumnUserId,
             this.ColumnUserName,
@@ -596,18 +741,20 @@ namespace SafeDoc.UI
             this.ColumnExpireDate,
             this.ColumnExpireTime,
             this.ColumnFlashPermission,
+            this.ColumnUsbUseCount,
+            this.ColumnUsbUsedTimes,
             this.ColumnEdit,
             this.ColumnDelete,
             this.ColumnFingerprint,
             this.ColumnFingerprintStatus});
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Shabnam FD", 9F);
-            dataGridViewCellStyle4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(64)))), ((int)(((byte)(175)))));
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvUsers.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(23)))), ((int)(((byte)(42)))));
+            dataGridViewCellStyle10.Font = new System.Drawing.Font("Shabnam FD", 9F);
+            dataGridViewCellStyle10.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
+            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(64)))), ((int)(((byte)(175)))));
+            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvUsers.DefaultCellStyle = dataGridViewCellStyle10;
             this.dgvUsers.Location = new System.Drawing.Point(14, 23);
             this.dgvUsers.MultiSelect = false;
             this.dgvUsers.Name = "dgvUsers";
@@ -624,6 +771,110 @@ namespace SafeDoc.UI
             this.dgvUsers.CurrentCellDirtyStateChanged += new System.EventHandler(this.dgvUsers_CurrentCellDirtyStateChanged);
             this.dgvUsers.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.dgvUsers_DataBindingComplete);
             this.dgvUsers.SelectionChanged += new System.EventHandler(this.dgvUsers_SelectionChanged);
+            // 
+            // ColumnUserId
+            // 
+            this.ColumnUserId.DataPropertyName = "UserId";
+            this.ColumnUserId.FillWeight = 40F;
+            this.ColumnUserId.HeaderText = "ID";
+            this.ColumnUserId.MinimumWidth = 3;
+            this.ColumnUserId.Name = "ColumnUserId";
+            this.ColumnUserId.ReadOnly = true;
+            this.ColumnUserId.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            // 
+            // ColumnUserName
+            // 
+            this.ColumnUserName.DataPropertyName = "UserName";
+            this.ColumnUserName.HeaderText = "نام کاربری";
+            this.ColumnUserName.Name = "ColumnUserName";
+            this.ColumnUserName.ReadOnly = true;
+            // 
+            // ColumnPass
+            // 
+            this.ColumnPass.DataPropertyName = "Pass";
+            this.ColumnPass.FillWeight = 110F;
+            this.ColumnPass.HeaderText = "رمز";
+            this.ColumnPass.Name = "ColumnPass";
+            this.ColumnPass.ReadOnly = true;
+            this.ColumnPass.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // ColumnExpireDate
+            // 
+            this.ColumnExpireDate.DataPropertyName = "ExpireDate";
+            this.ColumnExpireDate.FillWeight = 89.65736F;
+            this.ColumnExpireDate.HeaderText = "تاریخ انقضا";
+            this.ColumnExpireDate.Name = "ColumnExpireDate";
+            this.ColumnExpireDate.ReadOnly = true;
+            // 
+            // ColumnExpireTime
+            // 
+            this.ColumnExpireTime.DataPropertyName = "ExpireTime";
+            this.ColumnExpireTime.FillWeight = 89.65736F;
+            this.ColumnExpireTime.HeaderText = "زمان انقضا";
+            this.ColumnExpireTime.Name = "ColumnExpireTime";
+            this.ColumnExpireTime.ReadOnly = true;
+            // 
+            // ColumnFlashPermission
+            // 
+            this.ColumnFlashPermission.DataPropertyName = "FlashPermission";
+            this.ColumnFlashPermission.FillWeight = 89.65736F;
+            this.ColumnFlashPermission.HeaderText = "مجوز فلش";
+            this.ColumnFlashPermission.Name = "ColumnFlashPermission";
+            this.ColumnFlashPermission.ReadOnly = true;
+            // 
+            // ColumnUsbUseCount
+            // 
+            this.ColumnUsbUseCount.DataPropertyName = "UsbUseCount";
+            this.ColumnUsbUseCount.FillWeight = 75F;
+            this.ColumnUsbUseCount.HeaderText = "تعداد مجاز USB";
+            this.ColumnUsbUseCount.Name = "ColumnUsbUseCount";
+            this.ColumnUsbUseCount.ReadOnly = true;
+            // 
+            // ColumnUsbUsedTimes
+            // 
+            this.ColumnUsbUsedTimes.DataPropertyName = "UsbUsedTimes";
+            this.ColumnUsbUsedTimes.FillWeight = 75F;
+            this.ColumnUsbUsedTimes.HeaderText = "دفعات استفاده USB";
+            this.ColumnUsbUsedTimes.Name = "ColumnUsbUsedTimes";
+            this.ColumnUsbUsedTimes.ReadOnly = true;
+            // 
+            // ColumnEdit
+            // 
+            this.ColumnEdit.FillWeight = 89.65736F;
+            this.ColumnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ColumnEdit.HeaderText = "ویرایش";
+            this.ColumnEdit.Name = "ColumnEdit";
+            this.ColumnEdit.ReadOnly = true;
+            this.ColumnEdit.Text = "✎";
+            this.ColumnEdit.UseColumnTextForButtonValue = true;
+            // 
+            // ColumnDelete
+            // 
+            this.ColumnDelete.FillWeight = 89.65736F;
+            this.ColumnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ColumnDelete.HeaderText = "حذف";
+            this.ColumnDelete.Name = "ColumnDelete";
+            this.ColumnDelete.ReadOnly = true;
+            this.ColumnDelete.Text = "حذف";
+            this.ColumnDelete.UseColumnTextForButtonValue = true;
+            // 
+            // ColumnFingerprint
+            // 
+            this.ColumnFingerprint.FillWeight = 89.65736F;
+            this.ColumnFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.ColumnFingerprint.HeaderText = "انگشت";
+            this.ColumnFingerprint.Name = "ColumnFingerprint";
+            this.ColumnFingerprint.ReadOnly = true;
+            this.ColumnFingerprint.Text = "ثبت";
+            this.ColumnFingerprint.UseColumnTextForButtonValue = true;
+            // 
+            // ColumnFingerprintStatus
+            // 
+            this.ColumnFingerprintStatus.DataPropertyName = "FingerprintStatus";
+            this.ColumnFingerprintStatus.FillWeight = 89.65736F;
+            this.ColumnFingerprintStatus.HeaderText = "وضعیت";
+            this.ColumnFingerprintStatus.Name = "ColumnFingerprintStatus";
+            this.ColumnFingerprintStatus.ReadOnly = true;
             // 
             // btnSaveSelectedUserPassword
             // 
@@ -907,100 +1158,12 @@ namespace SafeDoc.UI
             this.btnDeleteAllPasswords.UseVisualStyleBackColor = false;
             this.btnDeleteAllPasswords.Click += new System.EventHandler(this.btnDeleteAllPasswords_Click);
             // 
-            // ColumnUserId
-            // 
-            this.ColumnUserId.DataPropertyName = "UserId";
-            this.ColumnUserId.FillWeight = 40F;
-            this.ColumnUserId.HeaderText = "ID";
-            this.ColumnUserId.MinimumWidth = 3;
-            this.ColumnUserId.Name = "ColumnUserId";
-            this.ColumnUserId.ReadOnly = true;
-            this.ColumnUserId.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            // 
-            // ColumnUserName
-            // 
-            this.ColumnUserName.DataPropertyName = "UserName";
-            this.ColumnUserName.HeaderText = "نام کاربری";
-            this.ColumnUserName.Name = "ColumnUserName";
-            this.ColumnUserName.ReadOnly = true;
-            // 
-            // ColumnPass
-            // 
-            this.ColumnPass.DataPropertyName = "Pass";
-            this.ColumnPass.FillWeight = 110F;
-            this.ColumnPass.HeaderText = "رمز";
-            this.ColumnPass.Name = "ColumnPass";
-            this.ColumnPass.ReadOnly = true;
-            this.ColumnPass.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // ColumnExpireDate
-            // 
-            this.ColumnExpireDate.DataPropertyName = "ExpireDate";
-            this.ColumnExpireDate.FillWeight = 89.65736F;
-            this.ColumnExpireDate.HeaderText = "تاریخ انقضا";
-            this.ColumnExpireDate.Name = "ColumnExpireDate";
-            this.ColumnExpireDate.ReadOnly = true;
-            // 
-            // ColumnExpireTime
-            // 
-            this.ColumnExpireTime.DataPropertyName = "ExpireTime";
-            this.ColumnExpireTime.FillWeight = 89.65736F;
-            this.ColumnExpireTime.HeaderText = "زمان انقضا";
-            this.ColumnExpireTime.Name = "ColumnExpireTime";
-            this.ColumnExpireTime.ReadOnly = true;
-            // 
-            // ColumnFlashPermission
-            // 
-            this.ColumnFlashPermission.DataPropertyName = "FlashPermission";
-            this.ColumnFlashPermission.FillWeight = 89.65736F;
-            this.ColumnFlashPermission.HeaderText = "مجوز فلش";
-            this.ColumnFlashPermission.Name = "ColumnFlashPermission";
-            this.ColumnFlashPermission.ReadOnly = true;
-            // 
-            // ColumnEdit
-            // 
-            this.ColumnEdit.FillWeight = 89.65736F;
-            this.ColumnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnEdit.HeaderText = "ویرایش";
-            this.ColumnEdit.Name = "ColumnEdit";
-            this.ColumnEdit.ReadOnly = true;
-            this.ColumnEdit.Text = "✎";
-            this.ColumnEdit.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnDelete
-            // 
-            this.ColumnDelete.FillWeight = 89.65736F;
-            this.ColumnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnDelete.HeaderText = "حذف";
-            this.ColumnDelete.Name = "ColumnDelete";
-            this.ColumnDelete.ReadOnly = true;
-            this.ColumnDelete.Text = "حذف";
-            this.ColumnDelete.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnFingerprint
-            // 
-            this.ColumnFingerprint.FillWeight = 89.65736F;
-            this.ColumnFingerprint.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.ColumnFingerprint.HeaderText = "انگشت";
-            this.ColumnFingerprint.Name = "ColumnFingerprint";
-            this.ColumnFingerprint.ReadOnly = true;
-            this.ColumnFingerprint.Text = "ثبت";
-            this.ColumnFingerprint.UseColumnTextForButtonValue = true;
-            // 
-            // ColumnFingerprintStatus
-            // 
-            this.ColumnFingerprintStatus.DataPropertyName = "FingerprintStatus";
-            this.ColumnFingerprintStatus.FillWeight = 89.65736F;
-            this.ColumnFingerprintStatus.HeaderText = "وضعیت";
-            this.ColumnFingerprintStatus.Name = "ColumnFingerprintStatus";
-            this.ColumnFingerprintStatus.ReadOnly = true;
-            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(24)))), ((int)(((byte)(39)))));
-            this.ClientSize = new System.Drawing.Size(946, 566);
+            this.ClientSize = new System.Drawing.Size(946, 689);
             this.Controls.Add(this.pnlMain);
             this.Font = new System.Drawing.Font("Shabnam FD", 9F);
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(232)))), ((int)(((byte)(240)))));
@@ -1014,13 +1177,13 @@ namespace SafeDoc.UI
             this.Load += new System.EventHandler(this.FormMain_Load);
             this.Shown += new System.EventHandler(this.FormMain_Shown);
             this.pnlMain.ResumeLayout(false);
-            this.pnlMain.PerformLayout();
             this.connection.ResumeLayout(false);
             this.connection.PerformLayout();
             this.operationStatusStrip.ResumeLayout(false);
             this.operationStatusStrip.PerformLayout();
             this.groupFingerprint.ResumeLayout(false);
             this.groupFingerprint.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudUsbUseCount)).EndInit();
             this.groupSettings.ResumeLayout(false);
             this.groupSettings.PerformLayout();
             this.groupUsers.ResumeLayout(false);
@@ -1052,9 +1215,12 @@ namespace SafeDoc.UI
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnExpireDate;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnExpireTime;
         private System.Windows.Forms.DataGridViewCheckBoxColumn ColumnFlashPermission;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnUsbUseCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColumnUsbUsedTimes;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnEdit;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnDelete;
         private System.Windows.Forms.DataGridViewButtonColumn ColumnFingerprint;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColumnFingerprintStatus;
+        private System.Windows.Forms.CheckBox chkClearSavedAccessKey;
     }
 }

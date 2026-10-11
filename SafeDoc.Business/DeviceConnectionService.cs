@@ -8,7 +8,7 @@ namespace SafeDoc.Business
     {
         private readonly SafeDocClient _client;
 
-        public DeviceConnectionService(string portName, int baudRate = 115200)
+        public DeviceConnectionService(string portName, int baudRate)
         {
             _client = new SafeDocClient(portName, baudRate);
             _client.RawDataReceived += OnDataReceived;
@@ -24,6 +24,14 @@ namespace SafeDoc.Business
             }
         }
 
+        public string PortName
+        {
+            get
+            {
+                return _client.PortName;
+            }
+        }
+
         public event EventHandler<string> RawDataReceived;
         public event EventHandler<string> ErrorOccurred;
         public event EventHandler<string> CommandSent;
@@ -33,9 +41,25 @@ namespace SafeDoc.Business
             _client.Connect();
         }
 
-        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds = 10000)
+        public SafeDocResponse SendCommand(SafeDocCommand command, int timeoutMilliseconds)
         {
             return _client.SendCommand(command, timeoutMilliseconds);
+        }
+
+        public T ReadResponseData<T>(SafeDocResponse response)
+            where T : class, new()
+        {
+            return _client.ReadResponseData<T>(response);
+        }
+
+        public SafeDocDeviceSettings ReadDeviceSettings(SafeDocResponse response)
+        {
+            return _client.ReadDeviceSettings(response);
+        }
+
+        public System.Collections.Generic.List<T> ReadResponseList<T>(SafeDocResponse response)
+        {
+            return _client.ReadResponseList<T>(response);
         }
 
         private void OnDataReceived(object sender, string data)
