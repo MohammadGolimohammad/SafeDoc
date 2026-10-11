@@ -26,7 +26,7 @@ namespace SafeDoc.UI
                 key.SetValue(ValueName, encodedText, RegistryValueKind.String);
             }
         }
-
+        
         internal static string Load()
         {
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey(RegistryPath))

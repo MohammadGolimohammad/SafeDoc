@@ -1249,6 +1249,18 @@ namespace SafeDoc.UI
                     return;
                 }
 
+                Status("در حال ثبت زمان انقضای کاربر " + user.UserId + " در دستگاه...", true);
+                SafeDocResponse setExpirationResponse = _operations.SetExpiration(
+                    user.UserId.Value.ToString(),
+                    expirationTimestamp
+                );
+                ShowDeviceResponse(setExpirationResponse, true, false);
+                if (setExpirationResponse.isSuccess == false)
+                {
+                    EndOperationLoading();
+                    return;
+                }
+
                 user.FingerprintStatus = "ثبت شده";
                 SaveFlashPermissionUserIds();
                 dgvUsers.Refresh();
